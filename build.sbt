@@ -1,5 +1,27 @@
-name := "release-pager"
+import sbt._
+import Settings._
 
-version := "0.1"
+lazy val domain = project
+  .settings(commonSettings)
+  .settings(libraryDependencies ++= domainDependencies)
 
-scalaVersion := "2.13.1"
+lazy val service = project
+  .settings(commonSettings)
+  .settings(libraryDependencies ++= serviceDependencies)
+  .settings(libraryDependencies ++= storageDependencies)
+  .dependsOn(domain)
+
+lazy val backend = project
+  .settings(commonSettings)
+  .dependsOn(service)
+
+lazy val `release-pager` = Project("release-pager", file("."))
+  .settings(commonSettings)
+  .settings(organization := "psisoyev.io")
+  .settings(moduleName := "release-pager")
+  .settings(name := "release-pager")
+  .aggregate(
+    domain,
+    service,
+    backend
+  )

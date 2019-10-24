@@ -1,5 +1,2 @@
-*.class
-*.log
-
-target
-.idea
+target/
+.idea/
