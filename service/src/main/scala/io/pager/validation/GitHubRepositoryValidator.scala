@@ -25,24 +25,26 @@ trait GitHubRepositoryValidator extends RepositoryValidator {
         }
 
     def validate(name: String): ZIO[AppEnv, PagerError, Repository.Name] = {
+      def repositoryExists(uri: Uri) = for {
+        httpClient <- httpClient
+        res <- httpClient
+          .use(_.expect[String](uri / "releases"))
+          .foldM(failure, success)
+      } yield res
+
+      def failure(e: Throwable) =
+        info(s"Failed to find repository $name") *> ZIO.fail(RepositoryNotFound(name))
+
+      def success(s: String) =
+        info(s"Validated repository $name") *> ZIO.succeed(Repository.Name(name))
+
       val url =
         if (name.startsWith("http")) name
         else s"https://github.com/$name"
 
       Uri
         .fromString(url)
-        .fold(
-          _ => ZIO.fail(MalformedRepositoryUrl(name)),
-          uri => {
-            for {
-              httpClient <- httpClient
-              res <- httpClient
-                      .use(_.expect[String](uri))
-                      .mapError(_ => RepositoryNotFound(name))
-              _ <- info(s"Validated repository $name")
-            } yield Repository.Name(res)
-          }
-        )
+        .fold(_ => ZIO.fail(MalformedRepositoryUrl(name)), repositoryExists)
     }
   }
 }
