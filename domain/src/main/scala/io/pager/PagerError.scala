@@ -5,12 +5,12 @@ trait PagerError extends Throwable {
 }
 
 object PagerError {
-  case class RepositoryNotFound(name: String) extends PagerError {
-    def message: String = s"Repository $name not found"
+  case class NotFound(url: String) extends PagerError {
+    def message: String = s"$url not found"
   }
 
-  case class MalformedRepositoryUrl(name: String) extends PagerError {
-    def message: String = s"Couldn't build repository $name url"
+  case class MalformedUrl(url: String) extends PagerError {
+    def message: String = s"Couldn't build url for repository: $url"
   }
 
   case class UnexpectedError(text: String) extends PagerError {
