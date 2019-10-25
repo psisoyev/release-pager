@@ -9,6 +9,7 @@ lazy val service = project
   .settings(commonSettings)
   .settings(libraryDependencies ++= serviceDependencies)
   .settings(libraryDependencies ++= storageDependencies)
+  .settings(higherKinds)
   .dependsOn(domain)
 
 lazy val backend = project
@@ -25,5 +26,3 @@ lazy val `release-pager` = Project("release-pager", file("."))
     service,
     backend
   )
-
-addCommandAlias("fmt", "all release-pager/scalafmtSbt release-pager/scalafmtAll")
