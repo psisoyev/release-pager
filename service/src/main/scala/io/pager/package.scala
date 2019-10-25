@@ -1,5 +1,6 @@
 package io
 
+import io.pager.api.http.HttpClient
 import io.pager.api.telegram.TelegramClient
 import io.pager.logger.Logger
 import io.pager.validation.RepositoryValidator
@@ -8,6 +9,6 @@ import zio.clock.Clock
 import zio.console.Console
 
 package object pager {
-  type AppEnv     = Clock with Console with Logger with RepositoryValidator with TelegramClient
+  type AppEnv     = Clock with Console with Logger with RepositoryValidator with TelegramClient with HttpClient
   type AppTask[A] = RIO[AppEnv, A]
 }

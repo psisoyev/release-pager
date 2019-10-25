@@ -1,5 +1,6 @@
 package io.pager
 
+import io.pager.api.http.HttpClient
 import io.pager.api.telegram.TelegramClient
 import io.pager.logger._
 import io.pager.validation.GitHubRepositoryValidator
@@ -17,7 +18,7 @@ object Main extends zio.App {
       program = ZIO.environment[AppEnv].flatMap(_.telegramClient.start(token))
 
       _ <- program.provideSome[ZEnv] { base =>
-            new Clock with Console with TelegramClient.Canoe with GitHubRepositoryValidator with ConsoleLogger {
+            new Clock with Console with TelegramClient.Canoe with GitHubRepositoryValidator with ConsoleLogger with HttpClient.Http4s {
               override val clock: Clock.Service[Any]     = base.clock
               override val console: Console.Service[Any] = base.console
             }
