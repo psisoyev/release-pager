@@ -33,4 +33,6 @@ object Settings {
   val serviceDependencies = List(zio, zioCats, fs2Core, slf4j, canoe, scalaTest) ++ circe
   val domainDependencies = List(newtype)
   val backendDependencies = List(pureconfig)
+
+  val higherKinds = addCompilerPlugin("org.typelevel" %% "kind-projector" % Version.kindProjector)
 }
