@@ -8,6 +8,6 @@ import zio.clock.Clock
 import zio.console.Console
 
 package object pager {
-  type AppEnv = Clock with Console with Logger with RepositoryValidator with TelegramClient
+  type AppEnv     = Clock with Console with Logger with RepositoryValidator with TelegramClient
   type AppTask[A] = RIO[AppEnv, A]
 }

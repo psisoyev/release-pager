@@ -1,6 +1,6 @@
 package io.pager.storage
 
-import io.pager.{PagerError, Repository}
+import io.pager.{ PagerError, Repository }
 import zio.ZIO
 
 trait ProjectReleaseRepository {

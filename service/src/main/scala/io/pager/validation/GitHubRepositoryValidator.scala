@@ -1,9 +1,9 @@
 package io.pager.validation
 
 import cats.effect.Resource
-import io.pager.PagerError.{MalformedRepositoryUrl, RepositoryNotFound}
+import io.pager.PagerError.{ MalformedRepositoryUrl, RepositoryNotFound }
 import io.pager.logger._
-import io.pager.{AppEnv, AppTask, PagerError, Repository}
+import io.pager.{ AppEnv, AppTask, PagerError, Repository }
 import org.http4s.Uri
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder

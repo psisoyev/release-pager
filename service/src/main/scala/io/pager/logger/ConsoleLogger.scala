@@ -17,9 +17,10 @@ trait ConsoleLogger extends Logger { self: Console =>
 
     def trace(message: => String): ZIO[Any, PagerError, Unit] = console.putStrLn(message)
 
-    def error(t: Throwable)(message: => String): ZIO[Any, PagerError, Unit] = for {
-      _ <- console.putStrLn(t.stackTrace)
-      _ <- console.putStrLn(message)
-    } yield ()
+    def error(t: Throwable)(message: => String): ZIO[Any, PagerError, Unit] =
+      for {
+        _ <- console.putStrLn(t.stackTrace)
+        _ <- console.putStrLn(message)
+      } yield ()
   }
 }

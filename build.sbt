@@ -25,3 +25,5 @@ lazy val `release-pager` = Project("release-pager", file("."))
     service,
     backend
   )
+
+addCommandAlias("fmt", "all release-pager/scalafmtSbt release-pager/scalafmtAll")

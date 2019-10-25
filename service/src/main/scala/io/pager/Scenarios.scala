@@ -3,7 +3,7 @@ package io.pager
 import canoe.api._
 import canoe.syntax._
 import io.pager.logger._
-import zio.{UIO, ZIO}
+import zio.{ UIO, ZIO }
 
 object Scenarios {
 //  def addRepository[F[_] : TelegramClient]: Scenario[F, Unit] = {
@@ -33,7 +33,7 @@ object Scenarios {
 //    } yield ()
 //  }
 
-  def help[F[_] : TelegramClient]: Scenario[F, Unit] = {
+  def help[F[_]: TelegramClient]: Scenario[F, Unit] = {
     val helpText =
       """
         |/help Shows this menu
@@ -44,10 +44,12 @@ object Scenarios {
 
     for {
       chat <- Scenario.start(command("help").chat)
-      _ <- Scenario.eval(chat.send(helpText))
+      _    <- Scenario.eval(chat.send(helpText))
     } yield ()
   }
 
   def processError(e: Throwable): ZIO[Logger, PagerError, String] =
-    error(e)("Couldn't process command") *> UIO.succeed("Something went wrong while adding new project. Please try again.")
+    error(e)("Couldn't process command") *> UIO.succeed(
+      "Something went wrong while adding new project. Please try again."
+    )
 }

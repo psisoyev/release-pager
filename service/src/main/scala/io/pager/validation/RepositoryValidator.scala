@@ -1,6 +1,6 @@
 package io.pager.validation
 
-import io.pager.{AppEnv, PagerError, Repository}
+import io.pager.{ AppEnv, PagerError, Repository }
 import zio.ZIO
 
 trait RepositoryValidator {

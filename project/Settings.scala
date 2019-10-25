@@ -2,6 +2,7 @@ import Dependencies._
 import sbt.Keys.{scalacOptions, _}
 import sbt._
 import sbt.util.Level
+import org.scalafmt.sbt.ScalafmtPlugin.autoImport.scalafmtOnCompile
 
 object Settings {
   val commonSettings = {
@@ -23,7 +24,8 @@ object Settings {
       javacOptions ++= Seq("-g", "-source", "1.8", "-target", "1.8", "-encoding", "UTF-8"),
       logLevel := Level.Info,
       version := (version in ThisBuild).value,
-      publishArtifact in (Compile, packageDoc) := false
+      publishArtifact in (Compile, packageDoc) := false,
+      scalafmtOnCompile := true
     )
   }
 
