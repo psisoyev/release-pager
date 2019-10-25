@@ -9,12 +9,12 @@ import zio.{ ZEnv, _ }
 
 object Main extends zio.App {
   override def run(args: List[String]): ZIO[ZEnv, Nothing, Int] = {
-    val token = "XXX"
+    val token = sys.env("BOT_TOKEN")
 
     val result: ZIO[ZEnv, Throwable, Unit] = for {
       _ <- putStrLn("Starting bot")
 
-      program     = ZIO.environment[AppEnv].flatMap(_.telegramClient.start(token))
+      program = ZIO.environment[AppEnv].flatMap(_.telegramClient.start(token))
 
       _ <- program.provideSome[ZEnv] { base =>
             new Clock with Console with TelegramClient.Canoe with GitHubRepositoryValidator with ConsoleLogger {
