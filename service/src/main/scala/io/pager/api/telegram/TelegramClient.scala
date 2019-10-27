@@ -5,8 +5,10 @@ import canoe.models.Chat
 import canoe.models.messages.TextMessage
 import canoe.syntax._
 import fs2.Stream
+import io.pager.Subscription.ChatId
+import io.pager.storage._
 import io.pager.validation.RepositoryValidator
-import io.pager.{ AppEnv, AppTask }
+import io.pager.{ AppEnv, AppTask, Subscription }
 import zio._
 import zio.interop.catz._
 
@@ -30,8 +32,27 @@ object TelegramClient {
           _         <- Scenario.eval(chat.send("Examples: 'https://github.com/zio/zio' or 'zio/zio'"))
           userInput <- Scenario.next(text)
           _         <- Scenario.eval(chat.send(s"Checking repository $userInput"))
-          _         <- Scenario.eval(validateRepository(chat, userInput))
-          _         = chat.id
+          _ <- Scenario.eval(
+                validator
+                  .validate(userInput)
+                  .foldM(
+                    e => chat.send(s"Couldn't add repository $userInput: ${e.message}"),
+                    url => chat.send(s"Added repository $userInput") *> subscribe(Subscription(ChatId(chat.id), url))
+                  )
+              )
+        } yield ()
+
+      def listRepositories(implicit c: Client[AppTask]): Scenario[AppTask, Unit] =
+        for {
+          chat  <- Scenario.start(command("list").chat)
+          repos <- Scenario.eval(list(ChatId(chat.id)))
+          _ <- {
+            val result =
+              if (repos.isEmpty) chat.send("You don't have subscriptions yet")
+              else chat.send("Listing your subscriptions:") *> ZIO.foreach(repos)(url => chat.send(url.value))
+
+            Scenario.eval(result)
+          }
         } yield ()
 
       def help(implicit c: Client[AppTask]): Scenario[AppTask, Unit] =
@@ -58,14 +79,6 @@ object TelegramClient {
         Scenario.eval(chat.send(helpText))
       }
 
-      private def validateRepository(chat: Chat, userInput: String)(implicit c: Client[AppTask]): AppTask[TextMessage] =
-        validator
-          .validate(userInput)
-          .foldM(
-            e => chat.send(s"Couldn't add repository $userInput: ${e.message}"),
-            _ => chat.send(s"Added repository $userInput")
-          )
-
       override def start(token: String): AppTask[Unit] =
         ZIO
           .runtime[AppEnv]
@@ -78,7 +91,8 @@ object TelegramClient {
                   .follow(
                     start,
                     help,
-                    addRepository
+                    addRepository,
+                    listRepositories
                   )
               }
               .compile

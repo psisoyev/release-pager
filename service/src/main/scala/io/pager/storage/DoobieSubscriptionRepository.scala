@@ -1,10 +1,13 @@
 package io.pager.storage
-import io.pager.{ PagerError, Subscription }
-import zio.ZIO
+
+import io.pager.Subscription
+import io.pager.Subscription.{ ChatId, RepositoryUrl }
+import zio.UIO
 
 trait DoobieSubscriptionRepository extends SubscriptionRepository {
   override val repository: SubscriptionRepository.Service = new SubscriptionRepository.Service {
-    override def subscribe(subscription: Subscription): ZIO[Any, PagerError, Unit]   = ???
-    override def unsubscribe(subscription: Subscription): ZIO[Any, PagerError, Unit] = ???
+    override def subscribe(subscription: Subscription): UIO[Unit]   = ???
+    override def unsubscribe(subscription: Subscription): UIO[Unit] = ???
+    def list(chatId: ChatId): UIO[Set[RepositoryUrl]]               = ???
   }
 }
