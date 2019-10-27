@@ -1,12 +1,12 @@
 package io.pager.api.telegram
 
-import canoe.api.{ TelegramClient => Client, _ }
+import canoe.api.{TelegramClient => Client, _}
 import canoe.models.Chat
 import canoe.models.messages.TextMessage
 import canoe.syntax._
 import fs2.Stream
 import io.pager.validation.RepositoryValidator
-import io.pager.{ AppEnv, AppTask }
+import io.pager.{AppEnv, AppTask}
 import zio._
 import zio.interop.catz._
 
@@ -21,14 +21,6 @@ object TelegramClient {
 
   trait Canoe extends TelegramClient { self: RepositoryValidator =>
     override val telegramClient: TelegramClient.Service = new TelegramClient.Service {
-      private def validateRepository(chat: Chat, userInput: String)(implicit c: Client[AppTask]): AppTask[TextMessage] =
-        validator
-          .validate(userInput)
-          .foldM(
-            e => chat.send(s"Couldn't add repository $userInput: ${e.message}"),
-            _ => chat.send(s"Added repository $userInput")
-          )
-
       def addRepository(implicit c: Client[AppTask]): Scenario[AppTask, Unit] =
         for {
           chat      <- Scenario.start(command("add").chat)
@@ -39,7 +31,19 @@ object TelegramClient {
           _         <- Scenario.eval(validateRepository(chat, userInput))
         } yield ()
 
-      def help[F[_]: Client]: Scenario[F, Unit] = {
+      def help(implicit c: Client[AppTask]): Scenario[AppTask, Unit] =
+        for {
+          chat <- Scenario.start(command("help").chat)
+          _    <- broadcastHelp(chat)
+        } yield ()
+
+      def start(implicit c: Client[AppTask]): Scenario[AppTask, Unit] =
+        for {
+          chat <- Scenario.start(command("start").chat)
+          _    <- broadcastHelp(chat)
+        } yield ()
+
+      private def broadcastHelp(chat: Chat)(implicit c: Client[AppTask]): Scenario[AppTask, TextMessage] = {
         val helpText =
           """
             |/help Shows this menu
@@ -48,20 +52,31 @@ object TelegramClient {
             |/list List current subscriptions
             |""".stripMargin
 
-        for {
-          chat <- Scenario.start(command("help").chat)
-          _    <- Scenario.eval(chat.send(helpText))
-        } yield ()
+        Scenario.eval(chat.send(helpText))
       }
 
-      def start(token: String): AppTask[Unit] =
+      private def validateRepository(chat: Chat, userInput: String)(implicit c: Client[AppTask]): AppTask[TextMessage] =
+        validator
+          .validate(userInput)
+          .foldM(
+            e => chat.send(s"Couldn't add repository $userInput: ${e.message}"),
+            _ => chat.send(s"Added repository $userInput")
+          )
+
+      override def start(token: String): AppTask[Unit] =
         ZIO
           .runtime[AppEnv]
           .flatMap { implicit rt =>
             Stream
               .resource(Client.global[AppTask](token))
               .flatMap { implicit client =>
-                Bot.polling[AppTask].follow(help, addRepository)
+                Bot
+                  .polling[AppTask]
+                  .follow(
+                    start,
+                    help,
+                    addRepository
+                  )
               }
               .compile
               .drain
