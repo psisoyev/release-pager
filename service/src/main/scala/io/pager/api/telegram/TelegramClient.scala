@@ -1,12 +1,12 @@
 package io.pager.api.telegram
 
-import canoe.api.{TelegramClient => Client, _}
+import canoe.api.{ TelegramClient => Client, _ }
 import canoe.models.Chat
 import canoe.models.messages.TextMessage
 import canoe.syntax._
 import fs2.Stream
 import io.pager.validation.RepositoryValidator
-import io.pager.{AppEnv, AppTask}
+import io.pager.{ AppEnv, AppTask }
 import zio._
 import zio.interop.catz._
 
@@ -19,7 +19,9 @@ object TelegramClient {
     def start(token: String): AppTask[Unit]
   }
 
-  trait Canoe extends TelegramClient { self: RepositoryValidator =>
+  trait Canoe extends TelegramClient {
+    def validator: RepositoryValidator.Service
+
     override val telegramClient: TelegramClient.Service = new TelegramClient.Service {
       def addRepository(implicit c: Client[AppTask]): Scenario[AppTask, Unit] =
         for {
@@ -29,6 +31,7 @@ object TelegramClient {
           userInput <- Scenario.next(text)
           _         <- Scenario.eval(chat.send(s"Checking repository $userInput"))
           _         <- Scenario.eval(validateRepository(chat, userInput))
+          _         = chat.id
         } yield ()
 
       def help(implicit c: Client[AppTask]): Scenario[AppTask, Unit] =
