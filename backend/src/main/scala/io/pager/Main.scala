@@ -12,7 +12,7 @@ import zio.{ ZEnv, _ }
 
 object Main extends zio.App {
   override def run(args: List[String]): ZIO[ZEnv, Nothing, Int] = {
-    val token = "972654063:AAGUVSZDz5_B-GiZQMBFg0o49_L4sKhkook"
+    val token = "XXX"
 
     val result: ZIO[ZEnv, Throwable, Unit] = for {
       _ <- putStrLn("Starting bot")
