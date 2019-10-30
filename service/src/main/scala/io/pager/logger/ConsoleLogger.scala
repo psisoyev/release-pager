@@ -6,7 +6,8 @@ import zio.ZIO
 import zio.console.Console
 
 trait ConsoleLogger extends Logger { self: Console =>
-  override val logger: Logger.Service = new Logger.Service {
+  val logger: Logger.Service = new Logger.Service {
+
     def error(message: => String): ZIO[Any, PagerError, Unit] = console.putStrLn(message)
 
     def warn(message: => String): ZIO[Any, PagerError, Unit] = console.putStrLn(message)
