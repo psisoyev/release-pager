@@ -2,14 +2,17 @@ package io
 
 import io.pager.api.http.HttpClient
 import io.pager.api.telegram.TelegramClient
-import io.pager.logger.Logger
-import io.pager.storage.SubscriptionRepository
-import io.pager.validation.RepositoryValidator
-import zio.RIO
+import io.pager.logger.ConsoleLogger
+import io.pager.storage.InMemorySubscriptionRepository
+import io.pager.validation.GitHubRepositoryValidator
 import zio.clock.Clock
 import zio.console.Console
 
 package object pager {
-  type AppEnv     = Clock with Console with Logger with RepositoryValidator with TelegramClient with HttpClient with SubscriptionRepository
-  type AppTask[A] = RIO[AppEnv, A]
+  type LoggerEnv     = Console
+  type LoggingEnv    = ConsoleLogger with LoggerEnv
+  type ValidatorEnv  = LoggingEnv with HttpClient
+  type ValidationEnv = GitHubRepositoryValidator with ValidatorEnv
+  type ClientEnv     = InMemorySubscriptionRepository with ValidationEnv
+  type AppEnv        = Clock with TelegramClient.Canoe with ClientEnv with ValidatorEnv
 }

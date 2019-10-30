@@ -3,16 +3,16 @@ package io.pager
 import zio.ZIO
 
 package object logger {
-  def error(message: => String): ZIO[Logger, PagerError, Unit] = ZIO.accessM[Logger](_.logger.error(message))
+  def error(message: => String): ZIO[LoggingEnv, PagerError, Unit] = ZIO.accessM[LoggingEnv](_.error(message))
 
-  def warn(message: => String): ZIO[Logger, PagerError, Unit] = ZIO.accessM[Logger](_.logger.warn(message))
+  def warn(message: => String): ZIO[LoggingEnv, PagerError, Unit] = ZIO.accessM[LoggingEnv](_.warn(message))
 
-  def info(message: => String): ZIO[Logger, PagerError, Unit] = ZIO.accessM[Logger](_.logger.info(message))
+  def info(message: => String): ZIO[LoggingEnv, PagerError, Unit] = ZIO.accessM[LoggingEnv](_.info(message))
 
-  def debug(message: => String): ZIO[Logger, PagerError, Unit] = ZIO.accessM[Logger](_.logger.debug(message))
+  def debug(message: => String): ZIO[LoggingEnv, PagerError, Unit] = ZIO.accessM[LoggingEnv](_.debug(message))
 
-  def trace(message: => String): ZIO[Logger, PagerError, Unit] = ZIO.accessM[Logger](_.logger.trace(message))
+  def trace(message: => String): ZIO[LoggingEnv, PagerError, Unit] = ZIO.accessM[LoggingEnv](_.trace(message))
 
-  def error(t: Throwable)(message: => String): ZIO[Logger, PagerError, Unit] =
-    ZIO.accessM[Logger](_.logger.error(t)(message))
+  def error(t: Throwable)(message: => String): ZIO[LoggingEnv, PagerError, Unit] =
+    ZIO.accessM[LoggingEnv](_.error(t)(message))
 }
