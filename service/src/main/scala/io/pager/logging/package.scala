@@ -2,7 +2,7 @@ package io.pager
 
 import zio.ZIO
 
-package object logger {
+package object logging {
   def error(message: => String): ZIO[LoggingEnv, PagerError, Unit] = ZIO.accessM[LoggingEnv](_.error(message))
 
   def warn(message: => String): ZIO[LoggingEnv, PagerError, Unit] = ZIO.accessM[LoggingEnv](_.warn(message))

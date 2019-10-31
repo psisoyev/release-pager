@@ -2,7 +2,7 @@ package io
 
 import io.pager.api.http.HttpClient
 import io.pager.api.telegram.TelegramClient
-import io.pager.logger.ConsoleLogger
+import io.pager.logging.ConsoleLogger
 import io.pager.storage.InMemorySubscriptionRepository
 import io.pager.validation.GitHubRepositoryValidator
 import zio.clock.Clock

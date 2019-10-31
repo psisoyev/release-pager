@@ -1,4 +1,4 @@
-package io.pager.logger
+package io.pager.logging
 
 import io.pager.PagerError
 import zio.ZIO

@@ -12,5 +12,5 @@ package object storage {
     ZIO.accessM[SubscriptionRepository](_.repository.unsubscribe(subscription))
 
   def list(chatId: ChatId): RIO[SubscriptionRepository, Set[RepositoryUrl]] =
-    ZIO.accessM[SubscriptionRepository](_.repository.list(chatId))
+    ZIO.accessM[SubscriptionRepository](_.repository.listSubscriptions(chatId))
 }

@@ -4,7 +4,7 @@ import cats.effect.Resource
 import io.pager.Subscription.{ ChatId, RepositoryUrl }
 import io.pager.api.http.HttpClient
 import io.pager.api.telegram.TelegramClient
-import io.pager.logger._
+import io.pager.logging._
 import io.pager.storage.InMemorySubscriptionRepository
 import io.pager.validation.GitHubRepositoryValidator
 import org.http4s.client.Client
@@ -24,7 +24,8 @@ object Main extends zio.App {
       _ <- putStrLn("Starting bot")
 
       program    = ZIO.environment[AppEnv].flatMap(_.start(token))
-      emptyState <- Ref.make(Map.empty[ChatId, Set[RepositoryUrl]])
+      subscriberMap <- Ref.make(Map.empty[RepositoryUrl, Set[ChatId]])
+      subscriptionMap <- Ref.make(Map.empty[ChatId, Set[RepositoryUrl]])
       http4sClient <- ZIO
                        .runtime[ZEnv]
                        .map { implicit rts =>
@@ -35,18 +36,17 @@ object Main extends zio.App {
 
       _ <- putStrLn("Started bot")
 
-      _ <- program.provideSome[ZEnv] { base =>
-            new Clock
-              with Console
+      _ <- program.provide {
+            new Clock.Live
+              with Console.Live
               with ConsoleLogger
               with TelegramClient.Canoe
               with GitHubRepositoryValidator
               with InMemorySubscriptionRepository
               with HttpClient.Http4s {
-              override val clock: Clock.Service[Any]                   = base.clock
-              override val console: Console.Service[Any]               = base.console
-              override def state: Ref[Map[ChatId, Set[RepositoryUrl]]] = emptyState
               override def client: Resource[Task, Client[Task]]        = http4sClient
+              override def subscribers: Ref[SubscriberMap] = subscriberMap
+              override def subscriptions: Ref[SubscriptionMap] = subscriptionMap
             }
           }
     } yield ()

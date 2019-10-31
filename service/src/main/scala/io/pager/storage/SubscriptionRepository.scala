@@ -12,6 +12,7 @@ object SubscriptionRepository {
   trait Service {
     def subscribe(subscription: Subscription): UIO[Unit]
     def unsubscribe(subscription: Subscription): UIO[Unit]
-    def list(chatId: ChatId): UIO[Set[RepositoryUrl]]
+    def listSubscriptions(chatId: ChatId): UIO[Set[RepositoryUrl]]
+    def listRepositories(chatId: ChatId): UIO[Set[RepositoryUrl]]
   }
 }

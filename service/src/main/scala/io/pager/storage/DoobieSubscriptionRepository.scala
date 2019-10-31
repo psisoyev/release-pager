@@ -8,6 +8,6 @@ trait DoobieSubscriptionRepository extends SubscriptionRepository {
   override val repository: SubscriptionRepository.Service = new SubscriptionRepository.Service {
     override def subscribe(subscription: Subscription): UIO[Unit]   = ???
     override def unsubscribe(subscription: Subscription): UIO[Unit] = ???
-    def list(chatId: ChatId): UIO[Set[RepositoryUrl]]               = ???
+    def listSubscriptions(chatId: ChatId): UIO[Set[RepositoryUrl]]               = ???
   }
 }

@@ -2,8 +2,8 @@ package io.pager.validation
 
 import io.pager.PagerError.NotFound
 import io.pager.api.http._
-import io.pager.logger._
-import io.pager.{LoggingEnv, PagerError, Subscription, ValidatorEnv}
+import io.pager.logging._
+import io.pager.{ LoggingEnv, PagerError, Subscription, ValidatorEnv }
 import zio.ZIO
 
 trait GitHubRepositoryValidator extends RepositoryValidator.Service[ValidatorEnv] {
