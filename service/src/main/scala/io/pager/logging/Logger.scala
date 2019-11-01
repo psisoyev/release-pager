@@ -4,22 +4,22 @@ import io.pager.PagerError
 import zio.ZIO
 
 trait Logger {
-  val logger: Logger.Service[Any]
+  val logger: Logger.Service
 }
 
 object Logger {
 
-  trait Service[R] {
-    def trace(message: => String): ZIO[R, PagerError, Unit]
+  trait Service {
+    def trace(message: => String): ZIO[Any, PagerError, Unit]
 
-    def debug(message: => String): ZIO[R, PagerError, Unit]
+    def debug(message: => String): ZIO[Any, PagerError, Unit]
 
-    def info(message: => String): ZIO[R, PagerError, Unit]
+    def info(message: => String): ZIO[Any, PagerError, Unit]
 
-    def warn(message: => String): ZIO[R, PagerError, Unit]
+    def warn(message: => String): ZIO[Any, PagerError, Unit]
 
-    def error(message: => String): ZIO[R, PagerError, Unit]
+    def error(message: => String): ZIO[Any, PagerError, Unit]
 
-    def error(t: Throwable)(message: => String): ZIO[R, PagerError, Unit]
+    def error(t: Throwable)(message: => String): ZIO[Any, PagerError, Unit]
   }
 }

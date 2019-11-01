@@ -18,13 +18,13 @@ import scala.concurrent.ExecutionContext.Implicits
 
 object Main extends zio.App {
   override def run(args: List[String]): ZIO[ZEnv, Nothing, Int] = {
-    val token = sys.env("BOT_TOKEN")
+    val token = "XXX"
 
     val result: ZIO[ZEnv, Throwable, Unit] = for {
       _ <- putStrLn("Starting bot")
 
-      program    = ZIO.environment[AppEnv].flatMap(_.start(token))
-      subscriberMap <- Ref.make(Map.empty[RepositoryUrl, Set[ChatId]])
+      program         = ZIO.environment[AppEnv].flatMap(_.start(token))
+      subscriberMap   <- Ref.make(Map.empty[RepositoryUrl, RepositoryStatus])
       subscriptionMap <- Ref.make(Map.empty[ChatId, Set[RepositoryUrl]])
       http4sClient <- ZIO
                        .runtime[ZEnv]
@@ -37,16 +37,11 @@ object Main extends zio.App {
       _ <- putStrLn("Started bot")
 
       _ <- program.provide {
-            new Clock.Live
-              with Console.Live
-              with ConsoleLogger
-              with TelegramClient.Canoe
-              with GitHubRepositoryValidator
-              with InMemorySubscriptionRepository
-              with HttpClient.Http4s {
-              override def client: Resource[Task, Client[Task]]        = http4sClient
-              override def subscribers: Ref[SubscriberMap] = subscriberMap
-              override def subscriptions: Ref[SubscriptionMap] = subscriptionMap
+            new Clock.Live with ConsoleLogger with Console.Live with TelegramClient.Canoe with GitHubRepositoryValidator
+            with InMemorySubscriptionRepository with HttpClient.Http4s {
+              override def client: Resource[Task, Client[Task]] = http4sClient
+              override def subscribers: Ref[SubscriberMap]      = subscriberMap
+              override def subscriptions: Ref[SubscriptionMap]  = subscriptionMap
             }
           }
     } yield ()

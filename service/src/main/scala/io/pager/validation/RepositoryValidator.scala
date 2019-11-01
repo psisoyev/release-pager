@@ -4,11 +4,11 @@ import io.pager.{ PagerError, Subscription }
 import zio.ZIO
 
 trait RepositoryValidator {
-  def validator: RepositoryValidator.Service[Any]
+  def validator: RepositoryValidator.Service
 }
 
 object RepositoryValidator {
-  trait Service[R] {
-    def validate(text: String): ZIO[R, PagerError, Subscription.RepositoryUrl]
+  trait Service {
+    def validate(text: String): ZIO[Any, PagerError, Subscription.RepositoryUrl]
   }
 }

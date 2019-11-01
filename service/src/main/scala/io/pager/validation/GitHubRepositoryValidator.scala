@@ -1,25 +1,29 @@
 package io.pager.validation
 
 import io.pager.PagerError.NotFound
-import io.pager.api.http._
-import io.pager.logging._
-import io.pager.{ LoggingEnv, PagerError, Subscription, ValidatorEnv }
+import io.pager.api.http.HttpClient
+import io.pager.logging.Logger
+import io.pager.{ PagerError, Subscription }
 import zio.ZIO
 
-trait GitHubRepositoryValidator extends RepositoryValidator.Service[ValidatorEnv] {
-  def validate(name: String): ZIO[ValidatorEnv, PagerError, Subscription.RepositoryUrl] = {
-    def failure: ZIO[LoggingEnv, PagerError, Nothing] =
-      info(s"Failed to find repository $name") *> ZIO.fail(NotFound(name))
+trait GitHubRepositoryValidator extends RepositoryValidator.Service {
+  val logger: Logger.Service
+  val httpClient: HttpClient.Service
 
-    def success(url: String): ZIO[LoggingEnv, PagerError, Subscription.RepositoryUrl] =
-      info(s"Validated repository $name") *> ZIO.succeed(Subscription.RepositoryUrl(url))
+  def validate(name: String): ZIO[Any, PagerError, Subscription.RepositoryUrl] = {
+    def failure: ZIO[Any, PagerError, Nothing] =
+      logger.info(s"Failed to find repository $name") *> ZIO.fail(NotFound(name))
+
+    def success(url: String): ZIO[Any, PagerError, Subscription.RepositoryUrl] =
+      logger.info(s"Validated repository $name") *> ZIO.succeed(Subscription.RepositoryUrl(url))
 
     //      TODO remove last /
     val url =
       if (name.startsWith("https://github.com/") || name.startsWith("http://github.com/")) name
       else s"https://github.com/$name"
 
-    get(s"$url/releases")
+    httpClient
+      .get(s"$url/releases")
       .foldM(
         _ => failure,
         _ => success(url)

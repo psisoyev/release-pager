@@ -1,11 +1,11 @@
 package io.pager.storage
 
-import io.pager.{RepositoryStatus, Subscription}
-import io.pager.Subscription.{ChatId, RepositoryUrl}
-import zio.{Ref, UIO}
+import io.pager.{ RepositoryStatus, Subscription }
+import io.pager.Subscription.{ ChatId, RepositoryUrl }
+import zio.{ Ref, UIO }
 
 trait InMemorySubscriptionRepository extends SubscriptionRepository {
-  type SubscriberMap = Map[RepositoryUrl, RepositoryStatus]
+  type SubscriberMap   = Map[RepositoryUrl, RepositoryStatus]
   type SubscriptionMap = Map[ChatId, Set[RepositoryUrl]]
 
   def subscribers: Ref[SubscriberMap]
@@ -37,7 +37,7 @@ trait InMemorySubscriptionRepository extends SubscriptionRepository {
     private def updateSubscribers(subscription: Subscription)(f: Set[ChatId] => Set[ChatId]): UIO[SubscriberMap] =
       subscribers.update { current =>
         val subscriptions = current.getOrElse(subscription.url, RepositoryStatus.empty)
-        val updated = subscriptions.copy(subscribers = f(subscriptions.subscribers))
+        val updated       = subscriptions.copy(subscribers = f(subscriptions.subscribers))
         current + (subscription.url -> updated)
       }
   }
