@@ -23,7 +23,7 @@ object Main extends zio.App {
     val result: ZIO[ZEnv, Throwable, Unit] = for {
       _ <- putStrLn("Starting bot")
 
-      program         = ZIO.environment[AppEnv].flatMap(_.start(token))
+      program         = ZIO.environment[AppEnv].flatMap(_.telegramClient.start(token))
       subscriberMap   <- Ref.make(Map.empty[RepositoryUrl, RepositoryStatus])
       subscriptionMap <- Ref.make(Map.empty[ChatId, Set[RepositoryUrl]])
       http4sClient <- ZIO
@@ -37,7 +37,7 @@ object Main extends zio.App {
       _ <- putStrLn("Started bot")
 
       _ <- program.provide {
-            new Clock.Live with ConsoleLogger with Console.Live with TelegramClient.Canoe with GitHubRepositoryValidator
+            new Clock.Live with Console.Live with ConsoleLogger with TelegramClient.Canoe with GitHubRepositoryValidator
             with InMemorySubscriptionRepository with HttpClient.Http4s {
               override def client: Resource[Task, Client[Task]] = http4sClient
               override def subscribers: Ref[SubscriberMap]      = subscriberMap
