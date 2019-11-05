@@ -2,6 +2,7 @@ package io.pager
 
 import cats.effect.Resource
 import io.pager.Subscription.{ ChatId, RepositoryUrl }
+import io.pager.api.github.GitHubClient
 import io.pager.api.http.HttpClient
 import io.pager.api.telegram.TelegramClient
 import io.pager.logging._

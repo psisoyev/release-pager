@@ -30,7 +30,7 @@ object Settings {
   }
 
   val storageDependencies = doobie
-  val serviceDependencies = List(zio, zioCats, zioMacros, fs2Core, slf4j, canoe, scalaTest) ++ circe
+  val serviceDependencies = List(zio, zioCats, fs2Core, slf4j, canoe, scalaTest) ++ circe
   val domainDependencies = List(newtype)
   val backendDependencies = List(pureconfig)
 

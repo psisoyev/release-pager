@@ -3,7 +3,6 @@ import sbt._
 object Dependencies {
   val zio = "dev.zio" %% "zio" % Version.zio
   val zioCats = "dev.zio" %% "zio-interop-cats" % Version.zioCats
-  val zioMacros = "dev.zio" %% "zio-macros-core" % Version.zioMacros
 
   val fs2Core = "co.fs2" %% "fs2-core" % Version.fs2Core
 
@@ -31,7 +30,6 @@ object Dependencies {
 object Version {
   val zio = "1.0.0-RC16"
   val zioCats = "2.0.0.0-RC7"
-  val zioMacros = "0.5.0"
   val fs2Core = "2.0.1"
   val slf4j = "1.7.28"
   val kindProjector = "0.10.3"
