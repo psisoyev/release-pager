@@ -13,6 +13,6 @@ object SubscriptionRepository {
     def subscribe(subscription: Subscription): UIO[Unit]
     def unsubscribe(subscription: Subscription): UIO[Unit]
     def listSubscriptions(chatId: ChatId): UIO[Set[RepositoryUrl]]
-    def listRepositories(chatId: ChatId): UIO[Set[RepositoryUrl]]
+    def listRepositories: UIO[Set[RepositoryUrl]]
   }
 }

@@ -38,7 +38,7 @@ object Main extends zio.App {
 
       _ <- program.provide {
             new Clock.Live with Console.Live with ConsoleLogger with TelegramClient.Canoe with GitHubRepositoryValidator
-            with InMemorySubscriptionRepository with HttpClient.Http4s {
+            with InMemorySubscriptionRepository with HttpClient.Http4s with GitHubClient.Live {
               override def client: Resource[Task, Client[Task]] = http4sClient
               override def subscribers: Ref[SubscriberMap]      = subscriberMap
               override def subscriptions: Ref[SubscriptionMap]  = subscriptionMap

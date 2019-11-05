@@ -25,7 +25,7 @@ trait InMemorySubscriptionRepository extends SubscriptionRepository {
     override def listSubscriptions(chatId: ChatId): UIO[Set[RepositoryUrl]] =
       subscriptions.get.map(_.getOrElse(chatId, Set.empty))
 
-    def listRepositories(chatId: ChatId): UIO[Set[RepositoryUrl]] =
+    def listRepositories: UIO[Set[RepositoryUrl]] =
       subscribers.get.map(_.keySet)
 
     private def updateSubscriptions(subscription: Subscription)(f: Set[RepositoryUrl] => Set[RepositoryUrl]): UIO[SubscriptionMap] =

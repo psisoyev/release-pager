@@ -1,5 +1,6 @@
 package io
 
+import io.pager.api.github.GitHubClient
 import io.pager.api.http.HttpClient
 import io.pager.api.telegram.TelegramClient
 import io.pager.logging.Logger
@@ -12,5 +13,5 @@ package object pager {
   type ValidatorEnv  = HttpClient with LoggingEnv
   type ValidationEnv = RepositoryValidator with ValidatorEnv
   type ClientEnv     = SubscriptionRepository with ValidationEnv
-  type AppEnv        = Clock with TelegramClient with ClientEnv with ValidatorEnv
+  type AppEnv        = Clock with TelegramClient with ClientEnv with ValidatorEnv with GitHubClient
 }

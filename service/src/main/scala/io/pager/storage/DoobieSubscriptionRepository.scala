@@ -9,6 +9,6 @@ trait DoobieSubscriptionRepository extends SubscriptionRepository {
     override def subscribe(subscription: Subscription): UIO[Unit]           = ???
     override def unsubscribe(subscription: Subscription): UIO[Unit]         = ???
     override def listSubscriptions(chatId: ChatId): UIO[Set[RepositoryUrl]] = ???
-    override def listRepositories(chatId: ChatId): UIO[Set[RepositoryUrl]]  = ???
+    override def listRepositories: UIO[Set[RepositoryUrl]]                  = ???
   }
 }
