@@ -12,7 +12,6 @@ trait GitHubRepositoryValidator extends RepositoryValidator {
 
   def validator: RepositoryValidator.Service = new RepositoryValidator.Service {
     def validate(name: String): IO[PagerError, RepositoryUrl] = {
-      //      TODO remove last /
       val url =
         if (name.startsWith("https://github.com/") || name.startsWith("http://github.com/")) name
         else s"https://github.com/$name"

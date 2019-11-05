@@ -5,7 +5,7 @@ import io.pager.PagerError.NotFound
 import io.pager.Subscription.RepositoryUrl
 import io.pager.api.http.HttpClient
 import io.pager.logging.Logger
-import zio.{IO, ZIO}
+import zio.{ IO, ZIO }
 
 trait GitHubClient {
   val gitHubClient: GitHubClient.Service
