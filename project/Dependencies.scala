@@ -3,6 +3,8 @@ import sbt._
 object Dependencies {
   val zio = "dev.zio" %% "zio" % Version.zio
   val zioCats = "dev.zio" %% "zio-interop-cats" % Version.zioCats
+  val zioTest = "dev.zio" %% "zio-test"     % Version.zio % "test"
+  val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Version.zio % "test"
 
   val fs2Core = "co.fs2" %% "fs2-core" % Version.fs2Core
 
