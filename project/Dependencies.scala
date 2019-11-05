@@ -3,10 +3,9 @@ import sbt._
 object Dependencies {
   val zio = "dev.zio" %% "zio" % Version.zio
   val zioCats = "dev.zio" %% "zio-interop-cats" % Version.zioCats
+  val zioMacros = "dev.zio" %% "zio-macros-core" % Version.zioMacros
 
   val fs2Core = "co.fs2" %% "fs2-core" % Version.fs2Core
-
-  //  val http4sClient = "org.http4s" %% "http4s-blaze-client" % Version.http4s
 
   val doobieCore = "org.tpolecat" %% "doobie-core" % Version.doobie
   val doobieH2 = "org.tpolecat" %% "doobie-h2" % Version.doobie
@@ -30,8 +29,9 @@ object Dependencies {
 }
 
 object Version {
-  val zio = "1.0.0-RC15"
-  val zioCats = "2.0.0.0-RC5"
+  val zio = "1.0.0-RC16"
+  val zioCats = "2.0.0.0-RC7"
+  val zioMacros = "0.5.0"
   val fs2Core = "2.0.1"
   val slf4j = "1.7.28"
   val kindProjector = "0.10.3"
