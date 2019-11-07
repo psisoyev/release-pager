@@ -1,6 +1,6 @@
 package io.pager
 
-import io.pager.Subscription.{ ChatId, RepositoryUrl }
+import io.pager.Subscription.{ ChatId, RepositoryName }
 import io.pager.storage.{ InMemorySubscriptionRepository, SubscriptionRepository }
 import zio._
 import zio.test.Assertion._
@@ -14,8 +14,8 @@ object InMemorySubscriptionRepositoryTestCases {
 
   private def repo: UIO[SubscriptionRepository.Service] =
     for {
-      subscriberMap   <- Ref.make(Map.empty[RepositoryUrl, RepositoryStatus])
-      subscriptionMap <- Ref.make(Map.empty[ChatId, Set[RepositoryUrl]])
+      subscriberMap   <- Ref.make(Map.empty[RepositoryName, RepositoryStatus])
+      subscriptionMap <- Ref.make(Map.empty[ChatId, Set[RepositoryName]])
     } yield new InMemorySubscriptionRepository {
       override def subscribers: Ref[SubscriberMap]     = subscriberMap
       override def subscriptions: Ref[SubscriptionMap] = subscriptionMap
@@ -23,7 +23,7 @@ object InMemorySubscriptionRepositoryTestCases {
 
   private val chatId1 = ChatId(478912)
   private val chatId2 = ChatId(478913)
-  private val url     = RepositoryUrl("https://github.com/zio/zio")
+  private val url     = RepositoryName("https://github.com/zio/zio")
 
   val seq = Seq(
     testM("successfully subscribe to a repository") {

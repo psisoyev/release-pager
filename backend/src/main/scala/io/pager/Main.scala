@@ -1,7 +1,11 @@
 package io.pager
 
+import canoe.api.models.ChatApi
+import canoe.models.ChatId.Chat
+import canoe.models.PrivateChat
+import canoe.models.outgoing.TextContent
 import cats.effect.Resource
-import io.pager.Subscription.{ ChatId, RepositoryUrl }
+import io.pager.Subscription.{ ChatId, RepositoryName }
 import io.pager.api.github.GitHubClient
 import io.pager.api.http.HttpClient
 import io.pager.api.telegram.TelegramClient
@@ -19,14 +23,14 @@ import scala.concurrent.ExecutionContext.Implicits
 
 object Main extends zio.App {
   override def run(args: List[String]): ZIO[ZEnv, Nothing, Int] = {
-    val token = "XXX"
+    val token = "972654063:AAEOiS2tpJkrPNsIMLI7glUUvNCjxpJ_2T8"
 
     val result: ZIO[ZEnv, Throwable, Unit] = for {
       _ <- putStrLn("Starting bot")
 
       program         = ZIO.environment[AppEnv].flatMap(_.telegramClient.start(token))
-      subscriberMap   <- Ref.make(Map.empty[RepositoryUrl, RepositoryStatus])
-      subscriptionMap <- Ref.make(Map.empty[ChatId, Set[RepositoryUrl]])
+      subscriberMap   <- Ref.make(Map.empty[RepositoryName, RepositoryStatus])
+      subscriptionMap <- Ref.make(Map.empty[ChatId, Set[RepositoryName]])
       http4sClient <- ZIO
                        .runtime[ZEnv]
                        .map { implicit rts =>

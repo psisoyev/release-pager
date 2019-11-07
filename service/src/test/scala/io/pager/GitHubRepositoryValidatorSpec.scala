@@ -1,7 +1,7 @@
 package io.pager
 
 import io.pager.PagerError.NotFound
-import io.pager.Subscription.RepositoryUrl
+import io.pager.Subscription.RepositoryName
 import io.pager.api.github.GitHubClient
 import io.pager.logging.Logger
 import io.pager.validation.{ GitHubRepositoryValidator, RepositoryValidator }
@@ -23,8 +23,13 @@ object GitHubRepositoryValidatorTestCases {
 
   private val notFound = NotFound("yourRepo")
 
-  private val succeedingValidator = buildValidator(IO.succeed(_))
-  private val failingValidator    = buildValidator(_ => IO.fail(notFound))
+  private val succeedingValidator = buildValidator {
+    new GitHubClient.Service {
+      override def repositoryExists(name: RepositoryName): IO[PagerError, RepositoryName] = IO.succeed(name)
+      override def releases(name: RepositoryName): IO[PagerError, List[GitHubRelease]] = ???
+    }
+  }
+  private val failingValidator    = buildValidator(???)
 
   val seq = Seq(
     testM("successfully validate existing repository by name") {
@@ -32,23 +37,7 @@ object GitHubRepositoryValidatorTestCases {
 
       succeedingValidator
         .validate(repo)
-        .map(result => assert(result, equalTo(RepositoryUrl("https://github.com/zio/zio"))))
-        .provide(succeedingValidator)
-    },
-    testM("successfully validate existing repository by http url") {
-      val repo = "https://github.com/zio/zio"
-
-      succeedingValidator
-        .validate(repo)
-        .map(result => assert(result, equalTo(RepositoryUrl("https://github.com/zio/zio"))))
-        .provide(succeedingValidator)
-    },
-    testM("successfully validate existing repository by https url") {
-      val repo = "https://github.com/zio/zio"
-
-      succeedingValidator
-        .validate(repo)
-        .map(result => assert(result, equalTo(RepositoryUrl("https://github.com/zio/zio"))))
+        .map(result => assert(result, equalTo(RepositoryName("zio/zio"))))
         .provide(succeedingValidator)
     },
     testM("fail to validate non-existing portfolio") {

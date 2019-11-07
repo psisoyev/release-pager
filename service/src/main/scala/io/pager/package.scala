@@ -10,8 +10,7 @@ import zio.clock.Clock
 
 package object pager {
   type LoggingEnv    = Logger
-  type ValidatorEnv  = HttpClient with LoggingEnv
-  type ValidationEnv = RepositoryValidator with ValidatorEnv
+  type ValidationEnv = RepositoryValidator with HttpClient with LoggingEnv
   type ClientEnv     = SubscriptionRepository with ValidationEnv
-  type AppEnv        = Clock with TelegramClient with ClientEnv with ValidatorEnv with GitHubClient
+  type AppEnv        = Clock with TelegramClient with ClientEnv with GitHubClient
 }

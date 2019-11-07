@@ -38,7 +38,7 @@ object Version {
   val canoe = "0.2.0"
   val newtype = "0.4.3"
   val http4s = "0.21.0-M5"
-  val circe = "0.12.1"
+  val circe = "0.12.3"
   val pureconfig = "0.11.1"
   val scalaTest = "3.0.8"
   val doobie = "0.8.4"

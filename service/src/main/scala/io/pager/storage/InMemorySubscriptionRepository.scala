@@ -1,34 +1,34 @@
 package io.pager.storage
 
 import io.pager.{ RepositoryStatus, Subscription }
-import io.pager.Subscription.{ ChatId, RepositoryUrl }
+import io.pager.Subscription.{ ChatId, RepositoryName }
 import zio.{ Ref, UIO }
 
 trait InMemorySubscriptionRepository extends SubscriptionRepository {
-  type SubscriberMap   = Map[RepositoryUrl, RepositoryStatus]
-  type SubscriptionMap = Map[ChatId, Set[RepositoryUrl]]
+  type SubscriberMap   = Map[RepositoryName, RepositoryStatus]
+  type SubscriptionMap = Map[ChatId, Set[RepositoryName]]
 
   def subscribers: Ref[SubscriberMap]
   def subscriptions: Ref[SubscriptionMap]
 
   override val repository: SubscriptionRepository.Service = new SubscriptionRepository.Service {
     override def subscribe(subscription: Subscription): UIO[Unit] =
-      updateSubscriptions(subscription)(_ + subscription.url) *>
+      updateSubscriptions(subscription)(_ + subscription.name) *>
         updateSubscribers(subscription)(_ + subscription.chatId) *>
         UIO.unit
 
     override def unsubscribe(subscription: Subscription): UIO[Unit] =
-      updateSubscriptions(subscription)(_.filterNot(_ == subscription.url)) *>
+      updateSubscriptions(subscription)(_.filterNot(_ == subscription.name)) *>
         updateSubscribers(subscription)(_.filterNot(_ == subscription.chatId)) *>
         UIO.unit
 
-    override def listSubscriptions(chatId: ChatId): UIO[Set[RepositoryUrl]] =
+    override def listSubscriptions(chatId: ChatId): UIO[Set[RepositoryName]] =
       subscriptions.get.map(_.getOrElse(chatId, Set.empty))
 
-    def listRepositories: UIO[Set[RepositoryUrl]] =
-      subscribers.get.map(_.keySet)
+    def listRepositories: UIO[SubscriberMap] =
+      subscribers.get
 
-    private def updateSubscriptions(subscription: Subscription)(f: Set[RepositoryUrl] => Set[RepositoryUrl]): UIO[SubscriptionMap] =
+    private def updateSubscriptions(subscription: Subscription)(f: Set[RepositoryName] => Set[RepositoryName]): UIO[SubscriptionMap] =
       subscriptions.update { current =>
         val subscriptions = current.getOrElse(subscription.chatId, Set.empty)
         current + (subscription.chatId -> f(subscriptions))
@@ -36,9 +36,9 @@ trait InMemorySubscriptionRepository extends SubscriptionRepository {
 
     private def updateSubscribers(subscription: Subscription)(f: Set[ChatId] => Set[ChatId]): UIO[SubscriberMap] =
       subscribers.update { current =>
-        val subscriptions = current.getOrElse(subscription.url, RepositoryStatus.empty)
+        val subscriptions = current.getOrElse(subscription.name, RepositoryStatus.empty)
         val updated       = subscriptions.copy(subscribers = f(subscriptions.subscribers))
-        current + (subscription.url -> updated)
+        current + (subscription.name -> updated)
       }
   }
 }

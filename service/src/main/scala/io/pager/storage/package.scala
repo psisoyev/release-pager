@@ -1,6 +1,6 @@
 package io.pager
 
-import io.pager.Subscription.{ ChatId, RepositoryUrl }
+import io.pager.Subscription.{ ChatId, RepositoryName }
 import zio.{ RIO, ZIO }
 
 package object storage {
@@ -11,6 +11,6 @@ package object storage {
   def unsubscribe(subscription: Subscription): RIO[SubscriptionRepository, Unit] =
     ZIO.accessM[SubscriptionRepository](_.repository.unsubscribe(subscription))
 
-  def list(chatId: ChatId): RIO[SubscriptionRepository, Set[RepositoryUrl]] =
+  def list(chatId: ChatId): RIO[SubscriptionRepository, Set[RepositoryName]] =
     ZIO.accessM[SubscriptionRepository](_.repository.listSubscriptions(chatId))
 }

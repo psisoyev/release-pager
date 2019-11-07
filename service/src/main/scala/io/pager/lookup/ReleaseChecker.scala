@@ -1,6 +1,7 @@
 package io.pager.lookup
 
-import io.pager.Subscription.RepositoryUrl
+import io.pager.Subscription.RepositoryName
+import io.pager.api.github.GitHubClient
 import io.pager.api.http.HttpClient
 import io.pager.storage.SubscriptionRepository
 import zio.clock._
@@ -11,21 +12,24 @@ trait ReleaseChecker {
 
 object ReleaseChecker {
   trait Service {
-    def scheduleRefresh(url: RepositoryUrl): Unit
+    def scheduleRefresh(name: RepositoryName): Unit
   }
 
   trait Live extends ReleaseChecker with Clock {
     val repository: SubscriptionRepository.Service
-    val httpClient: HttpClient.Service
+    val gitHubClient: GitHubClient.Service
 
     override val releaseChecker: Service = new Service {
-      override def scheduleRefresh(url: RepositoryUrl): Unit = {
-        repository.listRepositories.map(_.map { url =>
-          httpClient.get(url.value)
-        })
+      override def scheduleRefresh(name: RepositoryName): Unit =
+        repository.listRepositories.map { repositories =>
+          repositories.map {
+            case (name, status) =>
+              gitHubClient.releases(name).map { releases =>
+              }
 
-        ???
-      }
+          }
+
+        }
     }
   }
 }

@@ -9,6 +9,6 @@ trait RepositoryValidator {
 
 object RepositoryValidator {
   trait Service {
-    def validate(text: String): ZIO[Any, PagerError, Subscription.RepositoryUrl]
+    def validate(text: String): ZIO[Any, PagerError, Subscription.RepositoryName]
   }
 }

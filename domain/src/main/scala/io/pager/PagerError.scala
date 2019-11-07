@@ -1,5 +1,7 @@
 package io.pager
 
+import io.pager.Subscription.RepositoryName
+
 trait PagerError extends Throwable {
   def message: String
 }

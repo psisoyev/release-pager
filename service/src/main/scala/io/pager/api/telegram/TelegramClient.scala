@@ -1,8 +1,10 @@
 package io.pager.api.telegram
 
+import canoe.api.models.ChatApi
 import canoe.api.{ TelegramClient => Client, _ }
-import canoe.models.Chat
+import canoe.models.{ Chat, PrivateChat }
 import canoe.models.messages.TextMessage
+import canoe.models.outgoing.TextContent
 import canoe.syntax._
 import fs2.Stream
 import io.pager.Subscription.ChatId
@@ -25,18 +27,24 @@ object TelegramClient {
 
   trait Canoe extends TelegramClient {
     override val telegramClient: Service = new Service {
+      def addRepository2(implicit c: Client[ClientTask]): Scenario[ClientTask, Unit] =
+        Scenario.eval {
+          val api = new ChatApi(PrivateChat(284319807, None, None, None))
+          api.send(TextContent("HELLO PRIVET"))
+        }.map(_ => ())
+
       def addRepository(implicit c: Client[ClientTask]): Scenario[ClientTask, Unit] =
         for {
           chat      <- Scenario.start(command("add").chat)
-          _         <- Scenario.eval(chat.send("Please provide a link to the repository or it's 'organization/name'"))
-          _         <- Scenario.eval(chat.send("Examples: 'https://github.com/zio/zio' or 'zio/zio'"))
+          _         <- Scenario.eval(chat.send("Please provide repository in form 'organization/name'"))
+          _         <- Scenario.eval(chat.send("Examples: psisoyev/release-pager or zio/zio"))
           userInput <- Scenario.next(text)
           _         <- Scenario.eval(chat.send(s"Checking repository $userInput"))
           _ <- Scenario.eval(
                 validate(userInput)
                   .foldM(
                     e => chat.send(s"Couldn't add repository $userInput: ${e.message}"),
-                    url => chat.send(s"Added repository $userInput") *> subscribe(Subscription(ChatId(chat.id), url))
+                    name => chat.send(s"Added repository $userInput") *> subscribe(Subscription(ChatId(chat.id), name))
                   )
               )
         } yield ()
@@ -48,7 +56,7 @@ object TelegramClient {
           _ <- {
             val result =
               if (repos.isEmpty) chat.send("You don't have subscriptions yet")
-              else chat.send("Listing your subscriptions:") *> ZIO.foreach(repos)(url => chat.send(url.value))
+              else chat.send("Listing your subscriptions:") *> ZIO.foreach(repos)(name => chat.send(name.value))
 
             Scenario.eval(result)
           }
@@ -63,6 +71,7 @@ object TelegramClient {
       def start(implicit c: Client[ClientTask]): Scenario[ClientTask, Unit] =
         for {
           chat <- Scenario.start(command("start").chat)
+          _    = println(chat)
           _    <- broadcastHelp(chat)
         } yield ()
 
@@ -91,7 +100,8 @@ object TelegramClient {
                     start,
                     help,
                     addRepository,
-                    listRepositories
+                    listRepositories,
+                    addRepository2
                   )
               }
               .compile
