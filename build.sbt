@@ -3,7 +3,6 @@ import Settings._
 
 lazy val domain = project
   .settings(commonSettings)
-  .settings(libraryDependencies ++= domainDependencies)
 
 lazy val service = project
   .settings(commonSettings)

@@ -1,3 +1,5 @@
 package io.pager
 
-case class GitHubRelease(name: String)
+import java.time.Instant
+
+case class GitHubRelease(name: String, published_at: Instant)

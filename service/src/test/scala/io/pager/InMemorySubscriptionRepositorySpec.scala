@@ -19,7 +19,7 @@ object InMemorySubscriptionRepositoryTestCases {
     } yield new InMemorySubscriptionRepository {
       override def subscribers: Ref[SubscriberMap]     = subscriberMap
       override def subscriptions: Ref[SubscriptionMap] = subscriptionMap
-    }.repository
+    }.subscriptionRepository
 
   private val chatId1 = ChatId(478912)
   private val chatId2 = ChatId(478913)

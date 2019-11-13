@@ -4,7 +4,7 @@ import io.pager.{ PagerError, Subscription }
 import zio.ZIO
 
 trait RepositoryValidator {
-  def validator: RepositoryValidator.Service
+  def repositoryValidator: RepositoryValidator.Service
 }
 
 object RepositoryValidator {

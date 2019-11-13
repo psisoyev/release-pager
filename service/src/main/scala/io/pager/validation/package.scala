@@ -4,5 +4,5 @@ import zio.ZIO
 
 package object validation {
   def validate(text: String): ZIO[RepositoryValidator, PagerError, Subscription.RepositoryName] =
-    ZIO.accessM[RepositoryValidator](_.validator.validate(text))
+    ZIO.accessM[RepositoryValidator](_.repositoryValidator.validate(text))
 }

@@ -1,15 +1,16 @@
 package io.pager.api.telegram
 
 import canoe.api.models.ChatApi
-import canoe.api.{ TelegramClient => Client, _ }
+import canoe.api.{TelegramClient => Client, _}
 import canoe.models.messages.TextMessage
 import canoe.models.outgoing.TextContent
-import canoe.models.{ Chat, PrivateChat }
+import canoe.models.{Chat, PrivateChat}
 import canoe.syntax._
 import io.pager.Subscription.ChatId
+import io.pager.logging.Logger
 import io.pager.storage._
 import io.pager.validation._
-import io.pager.{ ClientEnv, Subscription }
+import io.pager.{RepositoryStatus, Subscription}
 import zio._
 import zio.interop.catz._
 
@@ -18,15 +19,29 @@ trait TelegramClient {
 }
 
 object TelegramClient {
-  type ClientTask[A] = RIO[ClientEnv, A]
-
   trait Service {
-    def start: ClientTask[Unit]
+    def start: Task[Unit]
+    def broadcastNewVersion(repositoryStatus: RepositoryStatus): Task[Unit]
   }
 
-  class Canoe()(implicit canoeClient: Client[ClientTask]) extends TelegramClient {
+  trait Canoe extends TelegramClient {
+    def logger: Logger.Service
+    implicit def canoeClient: Client[Task]
+    def repositoryValidator: RepositoryValidator.Service
+    def subscriptionRepository: SubscriptionRepository.Service
+
     override val telegramClient: Service = new Service {
-      def addRepository: Scenario[ClientTask, Unit] =
+      def broadcastNewVersion(repositoryStatus: RepositoryStatus): Task[Unit] =
+        repositoryStatus.version.map { version =>
+          ZIO
+            .traverse(repositoryStatus.subscribers) { chatId =>
+              val api = new ChatApi(PrivateChat(chatId.value, None, None, None))
+              api.send(TextContent(s"HELLO PRIVET $version"))
+            }
+            .unit
+        }.getOrElse(UIO.unit)
+
+      def addRepository: Scenario[Task, Unit] =
         for {
           chat      <- Scenario.start(command("add").chat)
           _         <- Scenario.eval(chat.send("Please provide repository in form 'organization/name'"))
@@ -34,18 +49,19 @@ object TelegramClient {
           userInput <- Scenario.next(text)
           _         <- Scenario.eval(chat.send(s"Checking repository $userInput"))
           _ <- Scenario.eval(
-                validate(userInput)
+                repositoryValidator
+                  .validate(userInput)
                   .foldM(
                     e => chat.send(s"Couldn't add repository $userInput: ${e.message}"),
-                    name => chat.send(s"Added repository $userInput") *> subscribe(Subscription(ChatId(chat.id), name))
+                    name => chat.send(s"Added repository $userInput") *> subscriptionRepository.subscribe(Subscription(ChatId(chat.id), name))
                   )
               )
         } yield ()
 
-      def listRepositories: Scenario[ClientTask, Unit] =
+      def listRepositories: Scenario[Task, Unit] =
         for {
           chat  <- Scenario.start(command("list").chat)
-          repos <- Scenario.eval(ZIO.environment[ClientEnv] *> list(ChatId(chat.id)))
+          repos <- Scenario.eval(subscriptionRepository.listSubscriptions(ChatId(chat.id)))
           _ <- {
             val result =
               if (repos.isEmpty) chat.send("You don't have subscriptions yet")
@@ -55,20 +71,19 @@ object TelegramClient {
           }
         } yield ()
 
-      def help: Scenario[ClientTask, Unit] =
+      def help: Scenario[Task, Unit] =
         for {
           chat <- Scenario.start(command("help").chat)
           _    <- broadcastHelp(chat)
         } yield ()
 
-      def startBot: Scenario[ClientTask, Unit] =
+      def startBot: Scenario[Task, Unit] =
         for {
           chat <- Scenario.start(command("start").chat)
-          _    = println(chat)
           _    <- broadcastHelp(chat)
         } yield ()
 
-      private def broadcastHelp(chat: Chat): Scenario[ClientTask, TextMessage] = {
+      private def broadcastHelp(chat: Chat): Scenario[Task, TextMessage] = {
         val helpText =
           """
             |/help Shows this menu
@@ -80,13 +95,13 @@ object TelegramClient {
         Scenario.eval(chat.send(helpText))
       }
 
-      override def start: ClientTask[Unit] = {
-        Bot
-          .polling[ClientTask]
+      override def start: Task[Unit] =
+        logger.info("starting telegram polling") *>
+          Bot
+          .polling[Task]
           .follow(startBot, help, addRepository, listRepositories)
           .compile
           .drain
-      }
     }
   }
 }

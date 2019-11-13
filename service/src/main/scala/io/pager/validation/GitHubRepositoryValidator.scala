@@ -10,7 +10,7 @@ trait GitHubRepositoryValidator extends RepositoryValidator {
   val logger: Logger.Service
   val gitHubClient: GitHubClient.Service
 
-  def validator: RepositoryValidator.Service = new RepositoryValidator.Service {
+  def repositoryValidator: RepositoryValidator.Service = new RepositoryValidator.Service {
     def validate(name: String): IO[PagerError, RepositoryName] =
       gitHubClient
         .repositoryExists(RepositoryName(name))

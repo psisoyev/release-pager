@@ -22,8 +22,6 @@ object Dependencies {
 
   val canoe = "org.augustjune" %% "canoe" % Version.canoe
 
-  val newtype = "io.estatico" %% "newtype" % Version.newtype
-
   val pureconfig = "com.github.pureconfig" %% "pureconfig" % Version.pureconfig
 
   val scalaTest = "org.scalatest" %% "scalatest" % Version.scalaTest % Test
@@ -36,7 +34,6 @@ object Version {
   val slf4j = "1.7.28"
   val kindProjector = "0.10.3"
   val canoe = "0.2.0"
-  val newtype = "0.4.3"
   val http4s = "0.21.0-M5"
   val circe = "0.12.3"
   val pureconfig = "0.11.1"

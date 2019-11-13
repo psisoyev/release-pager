@@ -19,17 +19,17 @@ object GitHubRepositoryValidatorTestCases {
     new GitHubRepositoryValidator {
       override val logger: Logger.Service             = Logger.Test
       override val gitHubClient: GitHubClient.Service = client
-    }.validator
+    }.repositoryValidator
 
   private val notFound = NotFound("yourRepo")
 
   private val succeedingValidator = buildValidator {
     new GitHubClient.Service {
       override def repositoryExists(name: RepositoryName): IO[PagerError, RepositoryName] = IO.succeed(name)
-      override def releases(name: RepositoryName): IO[PagerError, List[GitHubRelease]] = ???
+      override def releases(name: RepositoryName): IO[PagerError, List[GitHubRelease]]    = ???
     }
   }
-  private val failingValidator    = buildValidator(???)
+  private val failingValidator = buildValidator(???)
 
   val seq = Seq(
     testM("successfully validate existing repository by name") {

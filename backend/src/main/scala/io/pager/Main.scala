@@ -1,24 +1,30 @@
 package io.pager
 
+import java.util.concurrent.TimeUnit
+
 import canoe.api.{TelegramClient => CanoeClient}
 import cats.effect.Resource
 import io.pager.Subscription.{ChatId, RepositoryName}
 import io.pager.api.github.GitHubClient
 import io.pager.api.http.HttpClient
-import io.pager.api.telegram.TelegramClient.{Canoe, ClientTask}
+import io.pager.api.telegram.TelegramClient
 import io.pager.logging._
-import io.pager.storage.InMemorySubscriptionRepository
-import io.pager.validation.GitHubRepositoryValidator
+import io.pager.lookup.ReleaseChecker
+import io.pager.storage.{InMemorySubscriptionRepository, SubscriptionRepository}
+import io.pager.validation.{GitHubRepositoryValidator, RepositoryValidator}
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
 import zio.clock.Clock
 import zio.console.{Console, putStrLn}
+import zio.duration.Duration
 import zio.interop.catz._
 import zio.{ZEnv, _}
 
 import scala.concurrent.ExecutionContext.Implicits
 
 object Main extends zio.App {
+  type AppEnv = SubscriptionRepository with RepositoryValidator with HttpClient with Logger with TelegramClient with GitHubClient with Clock with ReleaseChecker
+
   override def run(args: List[String]): ZIO[ZEnv, Nothing, Int] = {
     val token = "XXX"
 
@@ -29,10 +35,9 @@ object Main extends zio.App {
       subscriptionMap <- Ref.make(Map.empty[ChatId, Set[RepositoryName]])
 
       http4sClient <- buildHttpClient
-      _ <- startProgram(subscriberMap, subscriptionMap, http4sClient, token)
+      canoeClient  <- buildTelegramClient(token)
 
-      _ <- putStrLn("Started bot")
-
+      _ <- startProgram(subscriberMap, subscriptionMap, http4sClient, canoeClient)
     } yield ()
 
     program.foldM(
@@ -50,26 +55,35 @@ object Main extends zio.App {
           .resource
       }
 
-  private def startTelegramClient(client: CanoeClient[ClientTask]): ClientTask[Unit] =
-    new Canoe()(client).telegramClient.start
+  private def buildTelegramClient(token: String): RIO[ZEnv, Resource[Task, CanoeClient[Task]]] =
+    ZIO
+      .runtime[ZEnv]
+      .map { implicit rts =>
+        CanoeClient.global[Task](token)
+      }
 
   private def startProgram(
     subscriberMap: Ref[Map[RepositoryName, RepositoryStatus]],
     subscriptionMap: Ref[Map[ChatId, Set[RepositoryName]]],
     http4sClient: Resource[Task, Client[Task]],
-    token: String
-  ): Task[Unit] = {
-    ZIO
-      .runtime[ClientEnv]
-      .map { implicit rts => CanoeClient.global[ClientTask](token) }
-      .flatMap(_.use(startTelegramClient))
-      .provide {
-        new Clock.Live with Console.Live with ConsoleLogger with InMemorySubscriptionRepository with GitHubRepositoryValidator
-          with GitHubClient.Live with HttpClient.Http4s {
-          override def subscribers: Ref[SubscriberMap]      = subscriberMap
-          override def subscriptions: Ref[SubscriptionMap]  = subscriptionMap
-          override def client: Resource[Task, Client[Task]] = http4sClient
+    canoeClient: Resource[Task, CanoeClient[Task]]
+  ): Task[Int] = {
+    val scheduleReleaseChecker = ZIO.accessM[AppEnv](_.releaseChecker.scheduleRefresh).repeat(ZSchedule.fixed(Duration(10, TimeUnit.SECONDS)))
+    val startTelegramClient    = ZIO.accessM[TelegramClient](_.telegramClient.start).fork
+    val program                = startTelegramClient *> scheduleReleaseChecker
+
+    canoeClient.use { globalCanoeClient =>
+      http4sClient.use { http4sClient =>
+        program.provide {
+          new TelegramClient.Canoe with Clock.Live with Console.Live with ConsoleLogger with InMemorySubscriptionRepository
+          with GitHubRepositoryValidator with GitHubClient.Live with HttpClient.Http4s with ReleaseChecker.Live {
+            override def subscribers: Ref[SubscriberMap]         = subscriberMap
+            override def subscriptions: Ref[SubscriptionMap]     = subscriptionMap
+            override def client: Client[Task]                    = http4sClient
+            override implicit def canoeClient: CanoeClient[Task] = globalCanoeClient
+          }
         }
       }
+    }
   }
 }

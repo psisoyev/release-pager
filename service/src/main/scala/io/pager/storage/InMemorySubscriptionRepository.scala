@@ -11,7 +11,7 @@ trait InMemorySubscriptionRepository extends SubscriptionRepository {
   def subscribers: Ref[SubscriberMap]
   def subscriptions: Ref[SubscriptionMap]
 
-  override val repository: SubscriptionRepository.Service = new SubscriptionRepository.Service {
+  override val subscriptionRepository: SubscriptionRepository.Service = new SubscriptionRepository.Service {
     override def subscribe(subscription: Subscription): UIO[Unit] =
       updateSubscriptions(subscription)(_ + subscription.name) *>
         updateSubscribers(subscription)(_ + subscription.chatId) *>
