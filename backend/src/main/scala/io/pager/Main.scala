@@ -2,28 +2,35 @@ package io.pager
 
 import java.util.concurrent.TimeUnit
 
-import canoe.api.{TelegramClient => CanoeClient}
+import canoe.api.{ TelegramClient => CanoeClient }
 import cats.effect.Resource
-import io.pager.Subscription.{ChatId, RepositoryName}
+import io.pager.Subscription.{ ChatId, RepositoryName }
 import io.pager.api.github.GitHubClient
 import io.pager.api.http.HttpClient
 import io.pager.api.telegram.TelegramClient
 import io.pager.logging._
 import io.pager.lookup.ReleaseChecker
-import io.pager.storage.{InMemorySubscriptionRepository, SubscriptionRepository}
-import io.pager.validation.{GitHubRepositoryValidator, RepositoryValidator}
+import io.pager.storage.{ InMemorySubscriptionRepository, SubscriptionRepository }
+import io.pager.validation.{ GitHubRepositoryValidator, RepositoryValidator }
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
 import zio.clock.Clock
-import zio.console.{Console, putStrLn}
+import zio.console.{ putStrLn, Console }
 import zio.duration.Duration
 import zio.interop.catz._
-import zio.{ZEnv, _}
+import zio.{ ZEnv, _ }
 
 import scala.concurrent.ExecutionContext.Implicits
 
 object Main extends zio.App {
-  type AppEnv = SubscriptionRepository with RepositoryValidator with HttpClient with Logger with TelegramClient with GitHubClient with Clock with ReleaseChecker
+  type AppEnv = SubscriptionRepository
+    with RepositoryValidator
+    with HttpClient
+    with Logger
+    with TelegramClient
+    with GitHubClient
+    with Clock
+    with ReleaseChecker
 
   override def run(args: List[String]): ZIO[ZEnv, Nothing, Int] = {
     val token = "XXX"

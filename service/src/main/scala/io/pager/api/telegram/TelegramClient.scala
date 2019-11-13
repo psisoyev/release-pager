@@ -1,16 +1,16 @@
 package io.pager.api.telegram
 
 import canoe.api.models.ChatApi
-import canoe.api.{TelegramClient => Client, _}
+import canoe.api.{ TelegramClient => Client, _ }
 import canoe.models.messages.TextMessage
 import canoe.models.outgoing.TextContent
-import canoe.models.{Chat, PrivateChat}
+import canoe.models.{ Chat, PrivateChat }
 import canoe.syntax._
 import io.pager.Subscription.ChatId
 import io.pager.logging.Logger
 import io.pager.storage._
 import io.pager.validation._
-import io.pager.{RepositoryStatus, Subscription}
+import io.pager.{ RepositoryStatus, Subscription }
 import zio._
 import zio.interop.catz._
 
@@ -98,10 +98,10 @@ object TelegramClient {
       override def start: Task[Unit] =
         logger.info("starting telegram polling") *>
           Bot
-          .polling[Task]
-          .follow(startBot, help, addRepository, listRepositories)
-          .compile
-          .drain
+            .polling[Task]
+            .follow(startBot, help, addRepository, listRepositories)
+            .compile
+            .drain
     }
   }
 }
