@@ -10,7 +10,7 @@ import io.pager.api.http.HttpClient
 import io.pager.api.telegram.TelegramClient
 import io.pager.logging._
 import io.pager.lookup.ReleaseChecker
-import io.pager.storage.{ InMemorySubscriptionRepository, SubscriptionRepository }
+import io.pager.subscription.{ InMemorySubscriptionRepository, SubscriptionRepository }
 import io.pager.validation.{ GitHubRepositoryValidator, RepositoryValidator }
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder

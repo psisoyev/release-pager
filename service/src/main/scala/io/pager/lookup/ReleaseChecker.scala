@@ -4,7 +4,7 @@ import io.pager.RepositoryStatus.Version
 import io.pager.api.github.GitHubClient
 import io.pager.api.telegram.TelegramClient
 import io.pager.logging._
-import io.pager.storage.SubscriptionRepository
+import io.pager.subscription.SubscriptionRepository
 import io.pager.{ RepositoryStatus, Subscription }
 import zio.{ Task, ZIO }
 
@@ -45,5 +45,4 @@ object ReleaseChecker {
         }
         .unit
   }
-
 }

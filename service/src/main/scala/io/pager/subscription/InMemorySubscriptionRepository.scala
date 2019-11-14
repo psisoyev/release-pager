@@ -1,4 +1,4 @@
-package io.pager.storage
+package io.pager.subscription
 
 import io.pager.{ RepositoryStatus, Subscription }
 import io.pager.Subscription.{ ChatId, RepositoryName }

@@ -1,14 +1,14 @@
-package io.pager
+package io.pager.validation
 
 import io.pager.PagerError.NotFound
 import io.pager.Subscription.RepositoryName
 import io.pager.api.github.GitHubClient
 import io.pager.logging.Logger
-import io.pager.validation.{ GitHubRepositoryValidator, RepositoryValidator }
+import io.pager.validation.GitHubRepositoryValidatorTestCases._
+import io.pager.{GitHubRelease, PagerError}
 import zio._
 import zio.test.Assertion._
 import zio.test._
-import GitHubRepositoryValidatorTestCases._
 
 object GitHubRepositoryValidatorSpec extends DefaultRunnableSpec(suite(specName)(seq: _*))
 
@@ -21,7 +21,7 @@ object GitHubRepositoryValidatorTestCases {
       override val gitHubClient: GitHubClient.Service = client
     }.repositoryValidator
 
-  private val notFound = NotFound("yourRepo")
+  private val notFound = NotFound("ololo")
 
   private val succeedingValidator = buildValidator {
     new GitHubClient.Service {
@@ -29,7 +29,12 @@ object GitHubRepositoryValidatorTestCases {
       override def releases(name: RepositoryName): IO[PagerError, List[GitHubRelease]]    = ???
     }
   }
-  private val failingValidator = buildValidator(???)
+  private val failingValidator = buildValidator {
+    new GitHubClient.Service {
+      override def repositoryExists(name: RepositoryName): IO[PagerError, RepositoryName] = IO.fail(notFound)
+      override def releases(name: RepositoryName): IO[PagerError, List[GitHubRelease]] = ???
+    }
+  }
 
   val seq = Seq(
     testM("successfully validate existing repository by name") {

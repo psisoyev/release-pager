@@ -8,7 +8,7 @@ import canoe.models.{ Chat, PrivateChat }
 import canoe.syntax._
 import io.pager.Subscription.ChatId
 import io.pager.logging.Logger
-import io.pager.storage._
+import io.pager.subscription._
 import io.pager.validation._
 import io.pager.{ RepositoryStatus, Subscription }
 import zio._
