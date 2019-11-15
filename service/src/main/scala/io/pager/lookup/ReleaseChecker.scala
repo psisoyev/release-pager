@@ -40,7 +40,7 @@ object ReleaseChecker {
           case (name, status) =>
             gitHubClient.releases(name).flatMap { releases =>
               val latest = releases.maxBy(_.published_at)
-              telegramClient.broadcastNewVersion(status.newVersion(Version(latest.name)))
+              telegramClient.broadcastNewVersion(name, status.newVersion(Version(latest.name)))
             }
         }
         .unit

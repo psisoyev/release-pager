@@ -5,7 +5,7 @@ import io.pager.Subscription.RepositoryName
 import io.pager.api.github.GitHubClient
 import io.pager.logging.Logger
 import io.pager.validation.GitHubRepositoryValidatorTestCases._
-import io.pager.{GitHubRelease, PagerError}
+import io.pager.{ GitHubRelease, PagerError }
 import zio._
 import zio.test.Assertion._
 import zio.test._
@@ -32,7 +32,7 @@ object GitHubRepositoryValidatorTestCases {
   private val failingValidator = buildValidator {
     new GitHubClient.Service {
       override def repositoryExists(name: RepositoryName): IO[PagerError, RepositoryName] = IO.fail(notFound)
-      override def releases(name: RepositoryName): IO[PagerError, List[GitHubRelease]] = ???
+      override def releases(name: RepositoryName): IO[PagerError, List[GitHubRelease]]    = ???
     }
   }
 

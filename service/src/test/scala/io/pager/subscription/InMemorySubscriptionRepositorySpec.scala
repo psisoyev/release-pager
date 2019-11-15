@@ -1,8 +1,8 @@
 package io.pager.subscription
 
-import io.pager.Subscription.{ChatId, RepositoryName}
+import io.pager.Subscription.{ ChatId, RepositoryName }
 import io.pager.subscription.InMemorySubscriptionRepositoryTestCases._
-import io.pager.{RepositoryStatus, Subscription}
+import io.pager.{ RepositoryStatus, Subscription }
 import zio._
 import zio.test.Assertion._
 import zio.test._

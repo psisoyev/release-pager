@@ -6,7 +6,7 @@ import canoe.models.messages.TextMessage
 import canoe.models.outgoing.TextContent
 import canoe.models.{ Chat, PrivateChat }
 import canoe.syntax._
-import io.pager.Subscription.ChatId
+import io.pager.Subscription.{ ChatId, RepositoryName }
 import io.pager.logging.Logger
 import io.pager.subscription._
 import io.pager.validation._
@@ -21,7 +21,7 @@ trait TelegramClient {
 object TelegramClient {
   trait Service {
     def start: Task[Unit]
-    def broadcastNewVersion(repositoryStatus: RepositoryStatus): Task[Unit]
+    def broadcastNewVersion(name: RepositoryName, status: RepositoryStatus): Task[Unit]
   }
 
   trait Canoe extends TelegramClient {
@@ -31,12 +31,12 @@ object TelegramClient {
     def subscriptionRepository: SubscriptionRepository.Service
 
     override val telegramClient: Service = new Service {
-      def broadcastNewVersion(repositoryStatus: RepositoryStatus): Task[Unit] =
-        repositoryStatus.version.map { version =>
+      def broadcastNewVersion(name: RepositoryName, status: RepositoryStatus): Task[Unit] =
+        status.version.map { version =>
           ZIO
-            .traverse(repositoryStatus.subscribers) { chatId =>
+            .traverse(status.subscribers) { chatId =>
               val api = new ChatApi(PrivateChat(chatId.value, None, None, None))
-              api.send(TextContent(s"HELLO PRIVET $version"))
+              api.send(TextContent(s"There is new version of $name available: $version"))
             }
             .unit
         }.getOrElse(UIO.unit)
