@@ -22,8 +22,6 @@ object Dependencies {
 
   val canoe = "org.augustjune" %% "canoe" % Version.canoe
 
-  val pureconfig = "com.github.pureconfig" %% "pureconfig" % Version.pureconfig
-
   val scalaTest = "org.scalatest" %% "scalatest" % Version.scalaTest % Test
 }
 
@@ -36,7 +34,6 @@ object Version {
   val canoe = "0.2.0"
   val http4s = "0.21.0-M5"
   val circe = "0.12.3"
-  val pureconfig = "0.11.1"
   val scalaTest = "3.0.8"
   val doobie = "0.8.4"
 }

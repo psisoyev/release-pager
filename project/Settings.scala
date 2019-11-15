@@ -1,8 +1,8 @@
 import Dependencies._
+import org.scalafmt.sbt.ScalafmtPlugin.autoImport.scalafmtOnCompile
 import sbt.Keys.{scalacOptions, _}
 import sbt._
 import sbt.util.Level
-import org.scalafmt.sbt.ScalafmtPlugin.autoImport.scalafmtOnCompile
 
 object Settings {
   val commonSettings = {
@@ -31,7 +31,6 @@ object Settings {
 
   val storageDependencies = doobie
   val serviceDependencies = List(zio, zioCats, zioTest, zioTestSbt, fs2Core, slf4j, canoe, scalaTest) ++ circe
-  val backendDependencies = List(pureconfig)
 
   val higherKinds = addCompilerPlugin("org.typelevel" %% "kind-projector" % Version.kindProjector)
 }

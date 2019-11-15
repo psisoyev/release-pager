@@ -33,11 +33,9 @@ object Main extends zio.App {
     with ReleaseChecker
 
   override def run(args: List[String]): ZIO[ZEnv, Nothing, Int] = {
-    val token = "XXX"
+    val token = sys.env("BOT_TOKEN")
 
     val program = for {
-      _ <- putStrLn("Starting bot")
-
       subscriberMap   <- Ref.make(Map.empty[RepositoryName, RepositoryStatus])
       subscriptionMap <- Ref.make(Map.empty[ChatId, Set[RepositoryName]])
 
@@ -75,7 +73,7 @@ object Main extends zio.App {
     http4sClient: Resource[Task, Client[Task]],
     canoeClient: Resource[Task, CanoeClient[Task]]
   ): Task[Int] = {
-    val scheduleReleaseChecker = ZIO.accessM[AppEnv](_.releaseChecker.scheduleRefresh).repeat(ZSchedule.fixed(Duration(10, TimeUnit.SECONDS)))
+    val scheduleReleaseChecker = ZIO.accessM[AppEnv](_.releaseChecker.scheduleRefresh).repeat(ZSchedule.fixed(Duration(1, TimeUnit.MINUTES)))
     val startTelegramClient    = ZIO.accessM[TelegramClient](_.telegramClient.start).fork
     val program                = startTelegramClient *> scheduleReleaseChecker
 

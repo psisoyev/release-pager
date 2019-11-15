@@ -1,12 +1,12 @@
 package io.pager.api.github
 
-import io.circe.{ Decoder, Encoder }
 import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
-import io.pager.{ GitHubRelease, PagerError }
+import io.circe.{ Decoder, Encoder }
 import io.pager.PagerError.NotFound
 import io.pager.Subscription.RepositoryName
 import io.pager.api.http.HttpClient
 import io.pager.logging.Logger
+import io.pager.{ GitHubRelease, PagerError }
 import zio.{ IO, ZIO }
 
 trait GitHubClient {
