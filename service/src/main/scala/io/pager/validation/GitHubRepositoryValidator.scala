@@ -1,9 +1,9 @@
 package io.pager.validation
 
 import io.pager.PagerError
-import io.pager.Subscription.RepositoryName
 import io.pager.api.github.GitHubClient
 import io.pager.logging.Logger
+import io.pager.subscription.RepositoryName
 import zio.IO
 
 trait GitHubRepositoryValidator extends RepositoryValidator {

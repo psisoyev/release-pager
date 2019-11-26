@@ -1,7 +1,8 @@
 package io.pager.validation
 
-import io.pager.{ PagerError, Subscription }
-import zio.ZIO
+import io.pager.PagerError
+import io.pager.subscription.RepositoryName
+import zio.IO
 
 trait RepositoryValidator {
   def repositoryValidator: RepositoryValidator.Service
@@ -9,6 +10,6 @@ trait RepositoryValidator {
 
 object RepositoryValidator {
   trait Service {
-    def validate(text: String): ZIO[Any, PagerError, Subscription.RepositoryName]
+    def validate(text: String): IO[PagerError, RepositoryName]
   }
 }

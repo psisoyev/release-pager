@@ -1,8 +1,7 @@
 package io.pager.subscription
 
-import io.pager.Subscription.{ ChatId, RepositoryName }
+import io.pager.api.telegram.ChatId
 import io.pager.subscription.InMemorySubscriptionRepositoryTestCases._
-import io.pager.{ RepositoryStatus, Subscription }
 import zio._
 import zio.test.Assertion._
 import zio.test._
@@ -12,14 +11,14 @@ object InMemorySubscriptionRepositorySpec extends DefaultRunnableSpec(suite(spec
 object InMemorySubscriptionRepositoryTestCases {
   val specName: String = "InMemorySubscriptionRepositorySpec"
 
-  private def repo: UIO[SubscriptionRepository.Service] =
+  private def repo: UIO[Subscription.Service] =
     for {
       subscriberMap   <- Ref.make(Map.empty[RepositoryName, RepositoryStatus])
       subscriptionMap <- Ref.make(Map.empty[ChatId, Set[RepositoryName]])
-    } yield new InMemorySubscriptionRepository {
+    } yield new Subscription.InMemory {
       override def subscribers: Ref[SubscriberMap]     = subscriberMap
       override def subscriptions: Ref[SubscriptionMap] = subscriptionMap
-    }.subscriptionRepository
+    }.subscription
 
   private val chatId1 = ChatId(478912)
   private val chatId2 = ChatId(478913)
@@ -29,7 +28,7 @@ object InMemorySubscriptionRepositoryTestCases {
     testM("successfully subscribe to a repository") {
       for {
         repo           <- repo
-        _              <- repo.subscribe(Subscription(chatId1, url))
+        _              <- repo.subscribe(chatId1, url)
         repositories   <- repo.listRepositories
         subscriptions1 <- repo.listSubscriptions(chatId1)
         subscriptions2 <- repo.listSubscriptions(chatId2)
@@ -42,8 +41,8 @@ object InMemorySubscriptionRepositoryTestCases {
     testM("successfully subscribe to a repository twice") {
       for {
         repo           <- repo
-        _              <- repo.subscribe(Subscription(chatId1, url))
-        _              <- repo.subscribe(Subscription(chatId1, url))
+        _              <- repo.subscribe(chatId1, url)
+        _              <- repo.subscribe(chatId1, url)
         repositories   <- repo.listRepositories
         subscriptions1 <- repo.listSubscriptions(chatId1)
         subscriptions2 <- repo.listSubscriptions(chatId2)
@@ -56,8 +55,8 @@ object InMemorySubscriptionRepositoryTestCases {
     testM("successfully subscribe to a repository from two chats") {
       for {
         repo           <- repo
-        _              <- repo.subscribe(Subscription(chatId1, url))
-        _              <- repo.subscribe(Subscription(chatId2, url))
+        _              <- repo.subscribe(chatId1, url)
+        _              <- repo.subscribe(chatId2, url)
         repositories   <- repo.listRepositories
         subscriptions1 <- repo.listSubscriptions(chatId1)
         subscriptions2 <- repo.listSubscriptions(chatId2)
@@ -70,7 +69,7 @@ object InMemorySubscriptionRepositoryTestCases {
     testM("allow to unsubscribe from non-subscribed repository") {
       for {
         repo          <- repo
-        _             <- repo.unsubscribe(Subscription(chatId1, url))
+        _             <- repo.unsubscribe(chatId1, url)
         repositories  <- repo.listRepositories
         subscriptions <- repo.listSubscriptions(chatId1)
       } yield {
@@ -81,8 +80,8 @@ object InMemorySubscriptionRepositoryTestCases {
     testM("allow to unsubscribe from subscribed repository") {
       for {
         repo          <- repo
-        _             <- repo.subscribe(Subscription(chatId1, url))
-        _             <- repo.unsubscribe(Subscription(chatId1, url))
+        _             <- repo.subscribe(chatId1, url)
+        _             <- repo.unsubscribe(chatId1, url)
         repositories  <- repo.listRepositories
         subscriptions <- repo.listSubscriptions(chatId1)
       } yield {

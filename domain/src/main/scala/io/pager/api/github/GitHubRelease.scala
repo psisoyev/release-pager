@@ -1,4 +1,4 @@
-package io.pager
+package io.pager.api.github
 
 import java.time.Instant
 

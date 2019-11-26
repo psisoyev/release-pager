@@ -6,11 +6,9 @@ import canoe.models.messages.TextMessage
 import canoe.models.outgoing.TextContent
 import canoe.models.{ Chat, PrivateChat }
 import canoe.syntax._
-import io.pager.Subscription.{ ChatId, RepositoryName }
 import io.pager.logging.Logger
-import io.pager.subscription._
+import io.pager.subscription.{ RepositoryStatus, _ }
 import io.pager.validation._
-import io.pager.{ RepositoryStatus, Subscription }
 import zio._
 import zio.interop.catz._
 
@@ -28,7 +26,7 @@ object TelegramClient {
     def logger: Logger.Service
     implicit def canoeClient: Client[Task]
     def repositoryValidator: RepositoryValidator.Service
-    def subscriptionRepository: SubscriptionRepository.Service
+    def subscription: Subscription.Service
 
     override val telegramClient: Service = new Service {
       def broadcastNewVersion(name: RepositoryName, status: RepositoryStatus): Task[Unit] =
@@ -53,7 +51,7 @@ object TelegramClient {
                   .validate(userInput)
                   .foldM(
                     e => chat.send(s"Couldn't add repository $userInput: ${e.message}"),
-                    name => chat.send(s"Added repository $userInput") *> subscriptionRepository.subscribe(Subscription(ChatId(chat.id), name))
+                    name => chat.send(s"Added repository $userInput") *> subscription.subscribe(ChatId(chat.id), name)
                   )
               )
         } yield ()
@@ -61,7 +59,7 @@ object TelegramClient {
       def listRepositories: Scenario[Task, Unit] =
         for {
           chat  <- Scenario.start(command("list").chat)
-          repos <- Scenario.eval(subscriptionRepository.listSubscriptions(ChatId(chat.id)))
+          repos <- Scenario.eval(subscription.listSubscriptions(ChatId(chat.id)))
           _ <- {
             val result =
               if (repos.isEmpty) chat.send("You don't have subscriptions yet")
