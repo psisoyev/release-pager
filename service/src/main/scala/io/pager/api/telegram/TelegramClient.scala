@@ -7,7 +7,7 @@ import canoe.models.outgoing.TextContent
 import canoe.models.{ Chat, PrivateChat }
 import canoe.syntax._
 import io.pager.logging.Logger
-import io.pager.subscription.{ RepositoryStatus, _ }
+import io.pager.subscription._
 import io.pager.validation._
 import zio._
 import zio.interop.catz._
@@ -39,7 +39,7 @@ object TelegramClient {
             .unit
         }.getOrElse(UIO.unit)
 
-      def addRepository: Scenario[Task, Unit] =
+      def subscribe: Scenario[Task, Unit] =
         for {
           chat      <- Scenario.start(command("add").chat)
           _         <- Scenario.eval(chat.send("Please provide repository in form 'organization/name'"))
@@ -54,6 +54,19 @@ object TelegramClient {
                     name => chat.send(s"Added repository $userInput") *> subscription.subscribe(ChatId(chat.id), name)
                   )
               )
+        } yield ()
+
+      def unsubscribe: Scenario[Task, Unit] =
+        for {
+          chat      <- Scenario.start(command("del").chat)
+          _         <- Scenario.eval(chat.send("Please provide repository in form 'organization/name'"))
+          _         <- Scenario.eval(chat.send("Examples: psisoyev/release-pager or zio/zio"))
+          userInput <- Scenario.next(text)
+          _         <- Scenario.eval(chat.send(s"Checking repository $userInput"))
+          _ <- Scenario.eval {
+            subscription.unsubscribe(ChatId(chat.id), RepositoryName(userInput)) *>
+            chat.send(s"Removed repository $userInput from your subscription list")
+          }
         } yield ()
 
       def listRepositories: Scenario[Task, Unit] =
@@ -84,9 +97,9 @@ object TelegramClient {
       private def broadcastHelp(chat: Chat): Scenario[Task, TextMessage] = {
         val helpText =
           """
-            |/help Shows this menu
+            |/help Shows help menu
             |/add Subscribe to GitHub project releases
-            |/del Delete subscription
+            |/del Unsubscribe from GitHub project releases
             |/list List current subscriptions
             |""".stripMargin
 
@@ -97,7 +110,7 @@ object TelegramClient {
         logger.info("starting telegram polling") *>
           Bot
             .polling[Task]
-            .follow(startBot, help, addRepository, listRepositories)
+            .follow(startBot, help, subscribe, unsubscribe, listRepositories)
             .compile
             .drain
     }
