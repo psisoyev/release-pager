@@ -29,7 +29,7 @@ object Settings {
     )
   }
 
-  val storageDependencies = doobie
+  val storageDependencies = List(zio) ++ doobie
   val serviceDependencies = List(zio, zioCats, zioTest, zioTestSbt, fs2Core, slf4j, canoe, scalaTest) ++ circe
 
   val higherKinds = addCompilerPlugin("org.typelevel" %% "kind-projector" % Version.kindProjector)

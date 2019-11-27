@@ -4,12 +4,16 @@ import Settings._
 lazy val domain = project
   .settings(commonSettings)
 
+lazy val storage = project
+  .settings(commonSettings)
+  .settings(libraryDependencies ++= storageDependencies)
+  .dependsOn(domain)
+
 lazy val service = project
   .settings(commonSettings)
   .settings(libraryDependencies ++= serviceDependencies)
-  .settings(libraryDependencies ++= storageDependencies)
   .settings(higherKinds)
-  .dependsOn(domain)
+  .dependsOn(storage)
 
 lazy val backend = project
   .settings(commonSettings)
