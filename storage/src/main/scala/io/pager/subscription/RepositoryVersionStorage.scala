@@ -1,7 +1,7 @@
 package io.pager.subscription
 
 import io.pager.subscription.RepositoryStatus.Version
-import zio.{ Ref, UIO, ZIO }
+import zio.{Ref, UIO}
 
 trait RepositoryVersionStorage {
   val repositoryVersionStorage: RepositoryVersionStorage.Service

@@ -1,14 +1,14 @@
 package io.pager.client.github
 
-import io.circe.{ Decoder, Encoder }
-import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
+import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import io.circe.{Decoder, Encoder}
 import io.pager.PagerError
 import io.pager.PagerError.NotFound
 import io.pager.client.http.HttpClient
 import io.pager.logging.Logger
 import io.pager.subscription.RepositoryName
 import io.pager.subscription.RepositoryStatus.Version
-import zio.{ IO, ZIO }
+import zio.{IO, ZIO}
 
 trait GitHubClient {
   val gitHubClient: GitHubClient.Service

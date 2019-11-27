@@ -1,7 +1,7 @@
 package io.pager.subscription
 
 import io.pager.client.telegram.ChatId
-import zio.{ Ref, UIO, ZIO }
+import zio.{Ref, UIO}
 
 trait ChatStorage {
   val chatStorage: ChatStorage.Service

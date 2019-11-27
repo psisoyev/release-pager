@@ -2,25 +2,25 @@ package io.pager
 
 import java.util.concurrent.TimeUnit
 
-import canoe.api.{ TelegramClient => CanoeClient }
+import canoe.api.{TelegramClient => CanoeClient}
 import cats.effect.Resource
 import io.pager.client.github.GitHubClient
 import io.pager.client.http.HttpClient
-import io.pager.client.telegram.{ ChatId, TelegramClient }
+import io.pager.client.telegram.{ChatId, TelegramClient}
 import io.pager.logging._
 import io.pager.lookup.ReleaseChecker
 import io.pager.subscription.ChatStorage.SubscriptionMap
 import io.pager.subscription.RepositoryStatus.Version
 import io.pager.subscription.RepositoryVersionStorage.SubscriberMap
-import io.pager.subscription.{ ChatStorage, RepositoryName, RepositoryStatus, RepositoryVersionStorage, SubscriptionLogic }
-import io.pager.validation.{ GitHubRepositoryValidator, RepositoryValidator }
+import io.pager.subscription.{ChatStorage, RepositoryName, RepositoryVersionStorage, SubscriptionLogic}
+import io.pager.validation.{GitHubRepositoryValidator, RepositoryValidator}
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
+import zio._
 import zio.clock.Clock
-import zio.console.{ putStrLn, Console }
+import zio.console.{Console, putStrLn}
 import zio.duration.Duration
 import zio.interop.catz._
-import zio._
 
 import scala.concurrent.ExecutionContext.Implicits
 

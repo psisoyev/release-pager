@@ -1,6 +1,6 @@
 package io.pager
 
-import java.io.{ PrintWriter, StringWriter }
+import java.io.{PrintWriter, StringWriter}
 
 object ThrowableOps {
   implicit class ThrowableOps(t: Throwable) {

@@ -1,13 +1,13 @@
 package io.pager.client.telegram
 
 import canoe.api.models.ChatApi
-import canoe.api.{ TelegramClient => Client, _ }
+import canoe.api.{TelegramClient => Client, _}
 import canoe.models.messages.TextMessage
 import canoe.models.outgoing.TextContent
-import canoe.models.{ Chat, PrivateChat }
+import canoe.models.{Chat, PrivateChat}
 import canoe.syntax._
 import io.pager.logging.Logger
-import io.pager.subscription.{ RepositoryName, RepositoryStatus, SubscriptionLogic }
+import io.pager.subscription.{RepositoryName, RepositoryStatus, SubscriptionLogic}
 import io.pager.validation._
 import zio._
 import zio.interop.catz._

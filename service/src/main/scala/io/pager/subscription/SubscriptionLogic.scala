@@ -3,7 +3,7 @@ package io.pager.subscription
 import io.pager.client.telegram.ChatId
 import io.pager.logging.Logger
 import io.pager.subscription.RepositoryStatus.Version
-import zio.{ Task, UIO, ZIO }
+import zio.{Task, UIO, ZIO}
 
 trait SubscriptionLogic {
   val subscription: SubscriptionLogic.Service
