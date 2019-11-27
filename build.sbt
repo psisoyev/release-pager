@@ -26,6 +26,7 @@ lazy val `release-pager` = Project("release-pager", file("."))
   .settings(name := "release-pager")
   .aggregate(
     domain,
+    storage,
     service,
     backend
   )
