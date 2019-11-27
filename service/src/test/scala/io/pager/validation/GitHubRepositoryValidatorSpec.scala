@@ -2,7 +2,7 @@ package io.pager.validation
 
 import io.pager.PagerError
 import io.pager.PagerError.NotFound
-import io.pager.api.github.{ GitHubClient, GitHubRelease }
+import io.pager.client.github.{ GitHubClient, GitHubRelease }
 import io.pager.logging.Logger
 import io.pager.subscription.RepositoryName
 import io.pager.validation.GitHubRepositoryValidatorTestCases._

@@ -1,12 +1,13 @@
-package io.pager.api.github
+package io.pager.client.github
 
-import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
 import io.circe.{ Decoder, Encoder }
+import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
 import io.pager.PagerError
 import io.pager.PagerError.NotFound
-import io.pager.api.http.HttpClient
+import io.pager.client.http.HttpClient
 import io.pager.logging.Logger
 import io.pager.subscription.RepositoryName
+import io.pager.subscription.RepositoryStatus.Version
 import zio.{ IO, ZIO }
 
 trait GitHubClient {
@@ -19,12 +20,14 @@ object GitHubClient {
     def releases(name: RepositoryName): IO[PagerError, List[GitHubRelease]]
   }
 
+  implicit val versionEncoder: Encoder[Version]             = deriveEncoder
+  implicit val versionDecoder: Decoder[Version]             = deriveDecoder
+  implicit val gitHubReleaseEncoder: Encoder[GitHubRelease] = deriveEncoder
+  implicit val gitHubReleaseDecoder: Decoder[GitHubRelease] = deriveDecoder
+
   trait Live extends GitHubClient {
     val logger: Logger.Service
     val httpClient: HttpClient.Service
-
-    implicit val encoder: Encoder[GitHubRelease] = deriveEncoder
-    implicit val decoder: Decoder[GitHubRelease] = deriveDecoder
 
     override val gitHubClient: Service = new Service {
       override def repositoryExists(name: RepositoryName): IO[PagerError, RepositoryName] =

@@ -1,23 +1,25 @@
 package io.pager.subscription
 
-import io.pager.api.telegram.ChatId
-import io.pager.subscription.InMemorySubscriptionRepositoryTestCases._
+import io.pager.client.telegram.ChatId
+import io.pager.logging.Logger
+import io.pager.subscription.SubscriptionLogicTestCases._
 import zio._
 import zio.test.Assertion._
 import zio.test._
 
-object InMemorySubscriptionRepositorySpec extends DefaultRunnableSpec(suite(specName)(seq: _*))
+object SubscriptionLogicSpec extends DefaultRunnableSpec(suite(specName)(seq: _*))
 
-object InMemorySubscriptionRepositoryTestCases {
-  val specName: String = "InMemorySubscriptionRepositorySpec"
+object SubscriptionLogicTestCases {
+  val specName: String = "SubscriptionLogicSpec"
 
-  private def repo: UIO[Subscription.Service] =
+  private def repo: UIO[SubscriptionLogic.Service] =
     for {
-      subscriberMap   <- Ref.make(Map.empty[RepositoryName, RepositoryStatus])
-      subscriptionMap <- Ref.make(Map.empty[ChatId, Set[RepositoryName]])
-    } yield new Subscription.InMemory {
-      override def subscribers: Ref[SubscriberMap]     = subscriberMap
-      override def subscriptions: Ref[SubscriptionMap] = subscriptionMap
+      repositories <- RepositoryVersionStorage.Test.instance
+      chats        <- ChatStorage.Test.instance
+    } yield new SubscriptionLogic.Live {
+      override def logger: Logger.Service                                     = Logger.Test
+      override def chatStorage: ChatStorage.Service                           = chats
+      override def repositoryVersionStorage: RepositoryVersionStorage.Service = repositories
     }.subscription
 
   private val chatId1 = ChatId(478912)

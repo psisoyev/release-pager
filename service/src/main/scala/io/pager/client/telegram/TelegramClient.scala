@@ -1,4 +1,4 @@
-package io.pager.api.telegram
+package io.pager.client.telegram
 
 import canoe.api.models.ChatApi
 import canoe.api.{ TelegramClient => Client, _ }
@@ -7,7 +7,7 @@ import canoe.models.outgoing.TextContent
 import canoe.models.{ Chat, PrivateChat }
 import canoe.syntax._
 import io.pager.logging.Logger
-import io.pager.subscription._
+import io.pager.subscription.{ RepositoryName, RepositoryStatus, SubscriptionLogic }
 import io.pager.validation._
 import zio._
 import zio.interop.catz._
@@ -23,21 +23,19 @@ object TelegramClient {
   }
 
   trait Canoe extends TelegramClient {
-    def logger: Logger.Service
     implicit def canoeClient: Client[Task]
+    def logger: Logger.Service
     def repositoryValidator: RepositoryValidator.Service
-    def subscription: Subscription.Service
+    def subscription: SubscriptionLogic.Service
 
     override val telegramClient: Service = new Service {
       def broadcastNewVersion(name: RepositoryName, status: RepositoryStatus): Task[Unit] =
-        status.version.map { version =>
-          ZIO
-            .traverse(status.subscribers) { chatId =>
-              val api = new ChatApi(PrivateChat(chatId.value, None, None, None))
-              api.send(TextContent(s"There is new version of $name available: $version"))
-            }
-            .unit
-        }.getOrElse(UIO.unit)
+        ZIO
+          .traverse(status.subscribers) { chatId =>
+            val api = new ChatApi(PrivateChat(chatId.value, None, None, None))
+            api.send(TextContent(s"There is new version of $name available: ${status.version}"))
+          }
+          .unit
 
       def subscribe: Scenario[Task, Unit] =
         for {
@@ -64,9 +62,9 @@ object TelegramClient {
           userInput <- Scenario.next(text)
           _         <- Scenario.eval(chat.send(s"Checking repository $userInput"))
           _ <- Scenario.eval {
-            subscription.unsubscribe(ChatId(chat.id), RepositoryName(userInput)) *>
-            chat.send(s"Removed repository $userInput from your subscription list")
-          }
+                subscription.unsubscribe(ChatId(chat.id), RepositoryName(userInput)) *>
+                  chat.send(s"Removed repository $userInput from your subscription list")
+              }
         } yield ()
 
       def listRepositories: Scenario[Task, Unit] =

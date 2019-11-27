@@ -1,4 +1,4 @@
-package io.pager.api.http
+package io.pager.client.http
 
 import io.circe.{ Decoder, Encoder }
 import io.pager.PagerError
