@@ -1,8 +1,8 @@
 package io.pager.client.http
 
-import io.circe.{Decoder, Encoder}
+import io.circe.{ Decoder, Encoder }
 import io.pager.PagerError
-import io.pager.PagerError.{MalformedUrl, NotFound}
+import io.pager.PagerError.{ MalformedUrl, NotFound }
 import org.http4s.circe._
 import org.http4s.client.Client
 import org.http4s._

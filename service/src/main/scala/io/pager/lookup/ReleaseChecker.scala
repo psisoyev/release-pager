@@ -5,8 +5,8 @@ import io.pager.client.github.GitHubClient
 import io.pager.client.telegram.TelegramClient
 import io.pager.logging._
 import io.pager.subscription.RepositoryStatus.Version
-import io.pager.subscription.{RepositoryName, RepositoryStatus, SubscriptionLogic}
-import zio.{IO, Task, UIO, ZIO}
+import io.pager.subscription.{ RepositoryName, RepositoryStatus, SubscriptionLogic }
+import zio.{ IO, Task, UIO, ZIO }
 
 import scala.util.Try
 
