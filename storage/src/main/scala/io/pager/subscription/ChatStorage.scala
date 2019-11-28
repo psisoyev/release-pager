@@ -1,7 +1,7 @@
 package io.pager.subscription
 
 import io.pager.client.telegram.ChatId
-import zio.{Ref, UIO}
+import zio.{Ref, Task, UIO}
 
 trait ChatStorage {
   val chatStorage: ChatStorage.Service
@@ -11,10 +11,10 @@ object ChatStorage {
   type SubscriptionMap = Map[ChatId, Set[RepositoryName]]
 
   trait Service {
-    def listSubscriptions(chatId: ChatId): UIO[Set[RepositoryName]]
-    def listSubscribers(repositoryName: RepositoryName): UIO[Set[ChatId]]
-    def subscribe(chatId: ChatId, repositoryName: RepositoryName): UIO[Unit]
-    def unsubscribe(chatId: ChatId, repositoryName: RepositoryName): UIO[Unit]
+    def listSubscriptions(chatId: ChatId): Task[Set[RepositoryName]]
+    def listSubscribers(repositoryName: RepositoryName): Task[Set[ChatId]]
+    def subscribe(chatId: ChatId, repositoryName: RepositoryName): Task[Unit]
+    def unsubscribe(chatId: ChatId, repositoryName: RepositoryName): Task[Unit]
   }
 
   trait InMemory extends ChatStorage {
@@ -32,7 +32,7 @@ object ChatStorage {
         updateSubscriptions(chatId)(_ + repositoryName).unit
 
       override def unsubscribe(chatId: ChatId, repositoryName: RepositoryName): UIO[Unit] =
-        updateSubscriptions(chatId)(_.filterNot(_ == repositoryName)).unit
+        updateSubscriptions(chatId)(_ - repositoryName).unit
 
       private def updateSubscriptions(chatId: ChatId)(f: Set[RepositoryName] => Set[RepositoryName]): UIO[SubscriptionMap] =
         subscriptions.update { current =>
