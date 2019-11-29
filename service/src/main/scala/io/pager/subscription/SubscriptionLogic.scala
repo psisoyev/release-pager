@@ -26,11 +26,11 @@ object SubscriptionLogic {
 
     override val subscription: Service = new Service {
       override def subscribe(chatId: ChatId, name: Name): Task[Unit] =
-        logger.info(s"$chatId subscribed to $name") *>
+        logger.info(s"$chatId subscribed to ${name.value}") *>
           chatStorage.subscribe(chatId, name)
 
       override def unsubscribe(chatId: ChatId, name: Name): Task[Unit] =
-        logger.info(s"$chatId unsubscribed from $name") *>
+        logger.info(s"$chatId unsubscribed from ${name.value}") *>
           chatStorage.unsubscribe(chatId, name)
 
       override def listSubscriptions(chatId: ChatId): Task[Set[Name]] =

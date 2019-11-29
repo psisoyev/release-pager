@@ -9,17 +9,18 @@ import io.pager.subscription.SubscriptionLogic
 import io.pager.validation.RepositoryValidator
 import zio._
 
-trait ScenarioLogic[Scenario[F[_], +_]] {
+trait ScenarioLogic[Scenario[F[_], _]] {
   val scenarios: ScenarioLogic.Service[Scenario]
 }
 
 object ScenarioLogic {
   trait Service[Scenario[F[_], _]] {
+    def startBot: Scenario[Task, Unit]
+    def help: Scenario[Task, Unit]
+
     def subscribe: Scenario[Task, Unit]
     def unsubscribe: Scenario[Task, Unit]
     def listRepositories: Scenario[Task, Unit]
-    def help: Scenario[Task, Unit]
-    def startBot: Scenario[Task, Unit]
   }
 
   trait CanoeScenarios extends ScenarioLogic[Scenario] {

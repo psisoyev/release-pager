@@ -16,7 +16,8 @@ object Dependencies {
   val circeGeneric = "io.circe" %% "circe-generic" % Version.circe
   val circeCore = "io.circe" %% "circe-core" % Version.circe
   val circeParser = "io.circe" %% "circe-parser" % Version.circe
-  val circe = List(circeGeneric, circeCore, circeParser)
+  val circeExtras = "io.circe" %% "circe-generic-extras" % Version.circeExtras
+  val circe = List(circeGeneric, circeCore, circeParser, circeExtras)
 
   val slf4j = "org.slf4j" % "slf4j-simple" % Version.slf4j
 
@@ -26,14 +27,16 @@ object Dependencies {
 }
 
 object Version {
-  val zio = "1.0.0-RC16"
-  val zioCats = "2.0.0.0-RC7"
+  val zio = "1.0.0-RC17"
+  val zioCats = "2.0.0.0-RC10"
   val fs2Core = "2.0.1"
   val slf4j = "1.7.28"
   val kindProjector = "0.10.3"
   val canoe = "0.2.0"
   val http4s = "0.21.0-M5"
   val circe = "0.12.3"
+  val circeExtras = "0.12.2"
   val scalaTest = "3.0.8"
   val doobie = "0.8.4"
+  val newType = "0.4.3"
 }

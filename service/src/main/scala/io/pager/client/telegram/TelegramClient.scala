@@ -36,7 +36,13 @@ object TelegramClient {
         logger.info("starting telegram polling") *>
           Bot
             .polling[Task]
-            .follow(scenarios.startBot, scenarios.help, scenarios.subscribe, scenarios.unsubscribe, scenarios.listRepositories)
+            .follow(
+              scenarios.startBot,
+              scenarios.help,
+              scenarios.subscribe,
+              scenarios.unsubscribe,
+              scenarios.listRepositories
+            )
             .compile
             .drain
     }
