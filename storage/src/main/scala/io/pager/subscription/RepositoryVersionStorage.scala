@@ -1,6 +1,6 @@
 package io.pager.subscription
 
-import io.pager.subscription.RepositoryStatus.Version
+import io.pager.subscription.Repository.{ Name, Version }
 import zio.{ Ref, UIO }
 
 trait RepositoryVersionStorage {
@@ -8,13 +8,13 @@ trait RepositoryVersionStorage {
 }
 
 object RepositoryVersionStorage {
-  type SubscriberMap = Map[RepositoryName, Option[Version]]
+  type SubscriberMap = Map[Name, Option[Version]]
 
   trait Service {
     def listRepositories: UIO[SubscriberMap]
-    def addRepository(repositoryName: RepositoryName): UIO[Unit]
-    def deleteRepository(repositoryName: RepositoryName): UIO[Unit]
-    def updateVersion(repositoryName: RepositoryName, version: Version): UIO[Unit]
+    def addRepository(name: Name): UIO[Unit]
+    def deleteRepository(name: Name): UIO[Unit]
+    def updateVersion(name: Name, version: Version): UIO[Unit]
   }
 
   trait InMemory extends RepositoryVersionStorage {
@@ -23,29 +23,30 @@ object RepositoryVersionStorage {
     val repositoryVersionStorage: Service = new Service {
       override def listRepositories: UIO[SubscriberMap] = subscribers.get
 
-      override def addRepository(repositoryName: RepositoryName): UIO[Unit] =
+      override def addRepository(name: Name): UIO[Unit] =
         subscribers.update { current =>
-          current + (repositoryName -> None)
+          current + (name -> None)
         }.unit
 
-      override def deleteRepository(repositoryName: RepositoryName): UIO[Unit] =
+      override def deleteRepository(name: Name): UIO[Unit] =
         subscribers
-          .update(_ - repositoryName)
+          .update(_ - name)
           .unit
 
-      override def updateVersion(repositoryName: RepositoryName, version: Version): UIO[Unit] =
-        subscribers.update { current =>
-          current + (repositoryName -> Some(version))
-        }.unit
+      override def updateVersion(name: Name, version: Version): UIO[Unit] =
+        subscribers
+          .update(_ + (name -> Some(version)))
+          .unit
     }
   }
 
   object Test {
     def instance: UIO[RepositoryVersionStorage.Service] =
-      Ref.make(Map.empty[RepositoryName, Option[Version]]).map { subscriberMap =>
-        new InMemory {
-          override def subscribers: Ref[SubscriberMap] = subscriberMap
-        }.repositoryVersionStorage
-      }
+      Ref
+        .make(Map.empty[Name, Option[Version]])
+        .map { subscriberMap =>
+          new InMemory { def subscribers: Ref[SubscriberMap] = subscriberMap }
+        }
+        .map(_.repositoryVersionStorage)
   }
 }

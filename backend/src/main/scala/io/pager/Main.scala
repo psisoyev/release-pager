@@ -6,14 +6,15 @@ import canoe.api.{ TelegramClient => CanoeClient }
 import cats.effect.Resource
 import io.pager.client.github.GitHubClient
 import io.pager.client.http.HttpClient
-import io.pager.client.telegram.{ ChatId, TelegramClient }
+import io.pager.client.telegram.{ ChatId, ScenarioLogic, TelegramClient }
 import io.pager.logging._
 import io.pager.lookup.ReleaseChecker
 import io.pager.subscription.ChatStorage.SubscriptionMap
-import io.pager.subscription.RepositoryStatus.Version
+import io.pager.subscription.Repository.{ Name, Version }
 import io.pager.subscription.RepositoryVersionStorage.SubscriberMap
-import io.pager.subscription.{ ChatStorage, RepositoryName, RepositoryVersionStorage, SubscriptionLogic }
-import io.pager.validation.{ GitHubRepositoryValidator, RepositoryValidator }
+import io.pager.subscription.{ ChatStorage, RepositoryVersionStorage, SubscriptionLogic }
+import io.pager.validation.RepositoryValidator
+import io.pager.validation.RepositoryValidator.GitHubRepositoryValidator
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
 import zio._
@@ -38,8 +39,8 @@ object Main extends zio.App {
     val token = sys.env("BOT_TOKEN")
 
     val program = for {
-      subscriberMap   <- Ref.make(Map.empty[RepositoryName, Option[Version]])
-      subscriptionMap <- Ref.make(Map.empty[ChatId, Set[RepositoryName]])
+      subscriberMap   <- Ref.make(Map.empty[Name, Option[Version]])
+      subscriptionMap <- Ref.make(Map.empty[ChatId, Set[Name]])
 
       http4sClient <- buildHttpClient
       canoeClient  <- buildTelegramClient(token)
@@ -70,8 +71,8 @@ object Main extends zio.App {
       }
 
   private def startProgram(
-    subscriberMap: Ref[Map[RepositoryName, Option[Version]]],
-    subscriptionMap: Ref[Map[ChatId, Set[RepositoryName]]],
+    subscriberMap: Ref[Map[Name, Option[Version]]],
+    subscriptionMap: Ref[Map[ChatId, Set[Name]]],
     http4sClient: Resource[Task, Client[Task]],
     canoeClient: Resource[Task, CanoeClient[Task]]
   ): Task[Int] = {
@@ -82,9 +83,9 @@ object Main extends zio.App {
     canoeClient.use { globalCanoeClient =>
       http4sClient.use { http4sClient =>
         program.provide {
-          new TelegramClient.Canoe with Clock.Live with Console.Live with ConsoleLogger with SubscriptionLogic.Live with ChatStorage.InMemory
-          with RepositoryVersionStorage.InMemory with GitHubRepositoryValidator with GitHubClient.Live with HttpClient.Http4s
-          with ReleaseChecker.Live {
+          new TelegramClient.Canoe with ScenarioLogic.CanoeScenarios with Clock.Live with Console.Live with ConsoleLogger with SubscriptionLogic.Live
+          with ChatStorage.InMemory with RepositoryVersionStorage.InMemory with GitHubRepositoryValidator with GitHubClient.Live
+          with HttpClient.Http4s with ReleaseChecker.Live {
             override def subscribers: Ref[SubscriberMap]         = subscriberMap
             override def subscriptions: Ref[SubscriptionMap]     = subscriptionMap
             override def client: Client[Task]                    = http4sClient

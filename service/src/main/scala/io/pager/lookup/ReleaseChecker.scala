@@ -4,9 +4,9 @@ import io.pager.PagerError
 import io.pager.client.github.GitHubClient
 import io.pager.client.telegram.TelegramClient
 import io.pager.logging._
-import io.pager.subscription.RepositoryStatus.Version
-import io.pager.subscription.{ RepositoryName, RepositoryStatus, SubscriptionLogic }
-import zio.{ IO, Task, UIO, ZIO }
+import io.pager.subscription.Repository.{ Name, Version }
+import io.pager.subscription.{ Repository, SubscriptionLogic }
+import zio.{ IO, Task, ZIO }
 
 import scala.util.Try
 
@@ -33,36 +33,35 @@ object ReleaseChecker {
           repos           <- subscription.listRepositories
           latestVersions  <- latestRepositoryVersions(repos.keySet)
           updatedVersions = newVersions(repos, latestVersions)
-          statuses        <- repositoryStatuses(updatedVersions)
           _               <- subscription.updateVersions(updatedVersions)
+          statuses        <- repositoryStates(updatedVersions)
           _               <- broadcastUpdates(statuses)
           _               <- logger.info("Finished repository refresh")
         } yield ()
     }
 
-    private def repositoryStatuses(updatedVersions: Map[RepositoryName, Version]): UIO[Map[RepositoryName, RepositoryStatus]] =
+    private def repositoryStates(updatedVersions: Map[Name, Version]): Task[List[Repository]] =
       ZIO
         .foreach(updatedVersions) {
           case (name, version) =>
             subscription
               .listSubscribers(name)
-              .map(subscribers => name -> RepositoryStatus(version, subscribers))
+              .map(subscribers => Repository(name, version, subscribers))
         }
-        .map(_.toMap)
 
-    private def latestRepositoryVersions(repos: Set[RepositoryName]): IO[PagerError, Map[RepositoryName, Option[Version]]] =
+    private def latestRepositoryVersions(repos: Set[Name]): IO[PagerError, Map[Name, Option[Version]]] =
       ZIO
-        .traverse(repos) { repositoryName =>
+        .traverse(repos) { name =>
           gitHubClient
-            .releases(repositoryName)
-            .map(releases => repositoryName -> Try(releases.maxBy(_.published_at).name).toOption)
+            .releases(name)
+            .map(releases => name -> Try(releases.maxBy(_.published_at).name).toOption)
         }
         .map(_.toMap)
 
     private def newVersions(
-      latestKnownReleases: Map[RepositoryName, Option[Version]],
-      latestReleases: Map[RepositoryName, Option[Version]]
-    ): Map[RepositoryName, Version] =
+      latestKnownReleases: Map[Name, Option[Version]],
+      latestReleases: Map[Name, Option[Version]]
+    ): Map[Name, Version] =
       latestKnownReleases.flatMap {
         case (name, latestKnownVersion) =>
           latestReleases
@@ -70,9 +69,12 @@ object ReleaseChecker {
             .collect { case Some(latestVersion) if !latestKnownVersion.contains(latestVersion) => name -> latestVersion }
       }
 
-    private def broadcastUpdates(repos: Map[RepositoryName, RepositoryStatus]): Task[Unit] =
+    private def broadcastUpdates(repos: List[Repository]): Task[Unit] =
       ZIO
-        .foreach(repos)(telegramClient.broadcastNewVersion _ tupled)
+        .foreach(repos) { repo =>
+          val message = s"There is new version of ${repo.name} available: ${repo.version}"
+          telegramClient.broadcastMessage(repo.subscribers, message)
+        }
         .unit
   }
 }

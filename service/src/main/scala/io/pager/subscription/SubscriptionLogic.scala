@@ -2,8 +2,8 @@ package io.pager.subscription
 
 import io.pager.client.telegram.ChatId
 import io.pager.logging.Logger
-import io.pager.subscription.RepositoryStatus.Version
-import zio.{ Task, UIO, ZIO }
+import io.pager.subscription.Repository.{ Name, Version }
+import zio.{ Task, ZIO }
 
 trait SubscriptionLogic {
   val subscription: SubscriptionLogic.Service
@@ -11,12 +11,12 @@ trait SubscriptionLogic {
 
 object SubscriptionLogic {
   trait Service {
-    def subscribe(chatId: ChatId, repositoryName: RepositoryName): Task[Unit]
-    def unsubscribe(chatId: ChatId, repositoryName: RepositoryName): Task[Unit]
-    def listSubscriptions(chatId: ChatId): Task[Set[RepositoryName]]
-    def listRepositories: Task[Map[RepositoryName, Option[Version]]]
-    def listSubscribers(repositoryName: RepositoryName): Task[Set[ChatId]]
-    def updateVersions(updatedVersions: Map[RepositoryName, RepositoryStatus.Version]): Task[Unit]
+    def subscribe(chatId: ChatId, name: Name): Task[Unit]
+    def unsubscribe(chatId: ChatId, name: Name): Task[Unit]
+    def listSubscriptions(chatId: ChatId): Task[Set[Name]]
+    def listRepositories: Task[Map[Name, Option[Version]]]
+    def listSubscribers(name: Name): Task[Set[ChatId]]
+    def updateVersions(updatedVersions: Map[Name, Version]): Task[Unit]
   }
 
   trait Live extends SubscriptionLogic {
@@ -25,27 +25,27 @@ object SubscriptionLogic {
     def repositoryVersionStorage: RepositoryVersionStorage.Service
 
     override val subscription: Service = new Service {
-      override def subscribe(chatId: ChatId, repositoryName: RepositoryName): Task[Unit] =
-        logger.info(s"$chatId subscribed to $repositoryName") *>
-          chatStorage.subscribe(chatId, repositoryName)
+      override def subscribe(chatId: ChatId, name: Name): Task[Unit] =
+        logger.info(s"$chatId subscribed to $name") *>
+          chatStorage.subscribe(chatId, name)
 
-      override def unsubscribe(chatId: ChatId, repositoryName: RepositoryName): Task[Unit] =
-        logger.info(s"$chatId unsubscribed from $repositoryName") *>
-          chatStorage.unsubscribe(chatId, repositoryName)
+      override def unsubscribe(chatId: ChatId, name: Name): Task[Unit] =
+        logger.info(s"$chatId unsubscribed from $name") *>
+          chatStorage.unsubscribe(chatId, name)
 
-      override def listSubscriptions(chatId: ChatId): Task[Set[RepositoryName]] =
+      override def listSubscriptions(chatId: ChatId): Task[Set[Name]] =
         logger.info(s"$chatId requested subscriptions") *>
           chatStorage.listSubscriptions(chatId)
 
-      override def listRepositories: Task[Map[RepositoryName, Option[Version]]] =
+      override def listRepositories: Task[Map[Name, Option[Version]]] =
         logger.info(s"Listing repositories") *>
           repositoryVersionStorage.listRepositories
 
-      override def listSubscribers(repositoryName: RepositoryName): Task[Set[ChatId]] =
-        logger.info(s"Listing repository $repositoryName subscribers") *>
-          chatStorage.listSubscribers(repositoryName)
+      override def listSubscribers(name: Name): Task[Set[ChatId]] =
+        logger.info(s"Listing repository $name subscribers") *>
+          chatStorage.listSubscribers(name)
 
-      override def updateVersions(updatedVersions: Map[RepositoryName, Version]): Task[Unit] =
+      override def updateVersions(updatedVersions: Map[Name, Version]): Task[Unit] =
         ZIO
           .foreach(updatedVersions) {
             case (name, version) =>

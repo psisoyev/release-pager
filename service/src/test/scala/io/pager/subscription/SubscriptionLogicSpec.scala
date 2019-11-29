@@ -2,6 +2,7 @@ package io.pager.subscription
 
 import io.pager.client.telegram.ChatId
 import io.pager.logging.Logger
+import io.pager.subscription.Repository.Name
 import io.pager.subscription.SubscriptionLogicTestCases._
 import zio._
 import zio.test.Assertion._
@@ -24,7 +25,7 @@ object SubscriptionLogicTestCases {
 
   private val chatId1 = ChatId(478912)
   private val chatId2 = ChatId(478913)
-  private val url     = RepositoryName("https://github.com/zio/zio")
+  private val url     = Name("https://github.com/zio/zio")
 
   val seq = Seq(
     testM("successfully subscribe to a repository") {

@@ -4,8 +4,9 @@ import io.pager.PagerError
 import io.pager.PagerError.NotFound
 import io.pager.client.github.{GitHubClient, GitHubRelease}
 import io.pager.logging.Logger
-import io.pager.subscription.RepositoryName
+import io.pager.subscription.Repository.Name
 import io.pager.validation.GitHubRepositoryValidatorTestCases._
+import io.pager.validation.RepositoryValidator.GitHubRepositoryValidator
 import zio._
 import zio.test.Assertion._
 import zio.test._
@@ -25,14 +26,14 @@ object GitHubRepositoryValidatorTestCases {
 
   private val succeedingValidator = buildValidator {
     new GitHubClient.Service {
-      override def repositoryExists(name: RepositoryName): IO[PagerError, RepositoryName] = IO.succeed(name)
-      override def releases(name: RepositoryName): IO[PagerError, List[GitHubRelease]]    = ???
+      override def repositoryExists(name: Name): IO[PagerError, Name]        = IO.succeed(name)
+      override def releases(name: Name): IO[PagerError, List[GitHubRelease]] = ???
     }
   }
   private val failingValidator = buildValidator {
     new GitHubClient.Service {
-      override def repositoryExists(name: RepositoryName): IO[PagerError, RepositoryName] = IO.fail(notFound)
-      override def releases(name: RepositoryName): IO[PagerError, List[GitHubRelease]]    = ???
+      override def repositoryExists(name: Name): IO[PagerError, Name]        = IO.fail(notFound)
+      override def releases(name: Name): IO[PagerError, List[GitHubRelease]] = ???
     }
   }
 
@@ -42,7 +43,7 @@ object GitHubRepositoryValidatorTestCases {
 
       succeedingValidator
         .validate(repo)
-        .map(result => assert(result, equalTo(RepositoryName("zio/zio"))))
+        .map(result => assert(result, equalTo(Name("zio/zio"))))
         .provide(succeedingValidator)
     },
     testM("fail to validate non-existing portfolio") {
