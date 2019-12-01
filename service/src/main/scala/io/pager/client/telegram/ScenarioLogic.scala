@@ -15,12 +15,12 @@ trait ScenarioLogic[Scenario[F[_], _]] {
 
 object ScenarioLogic {
   trait Service[Scenario[F[_], _]] {
-    def startBot: Scenario[Task, Unit]
+    def start: Scenario[Task, Unit]
     def help: Scenario[Task, Unit]
 
-    def subscribe: Scenario[Task, Unit]
-    def unsubscribe: Scenario[Task, Unit]
-    def listRepositories: Scenario[Task, Unit]
+    def add: Scenario[Task, Unit]
+    def del: Scenario[Task, Unit]
+    def list: Scenario[Task, Unit]
   }
 
   trait CanoeScenarios extends ScenarioLogic[Scenario] {
@@ -29,37 +29,37 @@ object ScenarioLogic {
     def repositoryValidator: RepositoryValidator.Service
 
     override val scenarios: Service[Scenario] = new Service[Scenario] {
-      override def subscribe: Scenario[Task, Unit] =
+      override def add: Scenario[Task, Unit] =
         for {
           chat      <- Scenario.start(command("add").chat)
           _         <- Scenario.eval(chat.send("Please provide repository in form 'organization/name'"))
           _         <- Scenario.eval(chat.send("Examples: psisoyev/release-pager or zio/zio"))
           userInput <- Scenario.next(text)
-          _         <- Scenario.eval(chat.send(s"Checking repository $userInput"))
+          _         <- Scenario.eval(chat.send(s"Checking repository '$userInput'"))
           _ <- Scenario.eval(
                 repositoryValidator
                   .validate(userInput)
                   .foldM(
-                    e => chat.send(s"Couldn't add repository $userInput: ${e.message}"),
-                    name => chat.send(s"Added repository $userInput") *> subscription.subscribe(ChatId(chat.id), name)
+                    e => chat.send(s"Couldn't add repository '$userInput': ${e.message}"),
+                    name => chat.send(s"Added repository '$userInput'") *> subscription.subscribe(ChatId(chat.id), name)
                   )
               )
         } yield ()
 
-      override def unsubscribe: Scenario[Task, Unit] =
+      override def del: Scenario[Task, Unit] =
         for {
           chat      <- Scenario.start(command("del").chat)
           _         <- Scenario.eval(chat.send("Please provide repository in form 'organization/name'"))
           _         <- Scenario.eval(chat.send("Examples: psisoyev/release-pager or zio/zio"))
           userInput <- Scenario.next(text)
-          _         <- Scenario.eval(chat.send(s"Checking repository $userInput"))
+          _         <- Scenario.eval(chat.send(s"Checking repository '$userInput'"))
           _ <- Scenario.eval {
                 subscription.unsubscribe(ChatId(chat.id), Name(userInput)) *>
-                  chat.send(s"Removed repository $userInput from your subscription list")
+                  chat.send(s"Removed repository '$userInput' from your subscription list")
               }
         } yield ()
 
-      override def listRepositories: Scenario[Task, Unit] =
+      override def list: Scenario[Task, Unit] =
         for {
           chat  <- Scenario.start(command("list").chat)
           repos <- Scenario.eval(subscription.listSubscriptions(ChatId(chat.id)))
@@ -78,7 +78,7 @@ object ScenarioLogic {
           _    <- broadcastHelp(chat)
         } yield ()
 
-      override def startBot: Scenario[Task, Unit] =
+      override def start: Scenario[Task, Unit] =
         for {
           chat <- Scenario.start(command("start").chat)
           _    <- broadcastHelp(chat)

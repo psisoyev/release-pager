@@ -24,9 +24,9 @@ object RepositoryVersionStorage {
       override def listRepositories: UIO[SubscriberMap] = subscribers.get
 
       override def addRepository(name: Name): UIO[Unit] =
-        subscribers.update { current =>
-          current + (name -> None)
-        }.unit
+        subscribers
+          .update(_ + (name -> None))
+          .unit
 
       override def deleteRepository(name: Name): UIO[Unit] =
         subscribers

@@ -72,7 +72,7 @@ object ReleaseChecker {
     private def broadcastUpdates(repos: List[Repository]): Task[Unit] =
       ZIO
         .foreach(repos) { repo =>
-          val message = s"There is new version of ${repo.name} available: ${repo.version}"
+          val message = s"There is a new version of ${repo.name.value} available: ${repo.version.value}"
           telegramClient.broadcastMessage(repo.subscribers, message)
         }
         .unit

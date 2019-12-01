@@ -33,15 +33,15 @@ object TelegramClient {
           .unit
 
       override def start: Task[Unit] =
-        logger.info("starting telegram polling") *>
+        logger.info("Starting Telegram polling") *>
           Bot
             .polling[Task]
             .follow(
-              scenarios.startBot,
+              scenarios.start,
               scenarios.help,
-              scenarios.subscribe,
-              scenarios.unsubscribe,
-              scenarios.listRepositories
+              scenarios.add,
+              scenarios.del,
+              scenarios.list
             )
             .compile
             .drain
