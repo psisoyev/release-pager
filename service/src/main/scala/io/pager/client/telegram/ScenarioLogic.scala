@@ -4,6 +4,7 @@ import canoe.api.{ TelegramClient => Client, _ }
 import canoe.models.Chat
 import canoe.models.messages.TextMessage
 import canoe.syntax._
+import io.pager.PagerError
 import io.pager.subscription.Repository.Name
 import io.pager.subscription.SubscriptionLogic
 import io.pager.validation.RepositoryValidator
@@ -36,15 +37,19 @@ object ScenarioLogic {
           _         <- Scenario.eval(chat.send("Examples: psisoyev/release-pager or zio/zio"))
           userInput <- Scenario.next(text)
           _         <- Scenario.eval(chat.send(s"Checking repository '$userInput'"))
-          _ <- Scenario.eval(
-                repositoryValidator
-                  .validate(userInput)
-                  .foldM(
-                    e => chat.send(s"Couldn't add repository '$userInput': ${e.message}"),
-                    name => chat.send(s"Added repository '$userInput'") *> subscription.subscribe(ChatId(chat.id), name)
-                  )
-              )
+          _         <- Scenario.eval(subscribe(chat, userInput, validate(userInput)))
         } yield ()
+
+      private def validate(userInput: String): IO[PagerError, Name] =
+        repositoryValidator.validate(userInput)
+
+      private def subscribe(chat: Chat, userInput: String, validated: IO[PagerError, Name]): Task[Unit] =
+        validated
+          .foldM(
+            e => chat.send(s"Couldn't add repository '$userInput': ${e.message}"),
+            name => chat.send(s"Added repository '$userInput'") *> subscription.subscribe(ChatId(chat.id), name)
+          )
+          .unit
 
       override def del: Scenario[Task, Unit] =
         for {

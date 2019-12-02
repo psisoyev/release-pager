@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import canoe.api.{ TelegramClient => CanoeClient }
 import cats.effect.Resource
+import io.pager.PagerError.MissingBotToken
 import io.pager.client.github.GitHubClient
 import io.pager.client.http.HttpClient
 import io.pager.client.telegram.{ ChatId, ScenarioLogic, TelegramClient }
@@ -19,6 +20,7 @@ import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
 import zio._
 import zio.clock.Clock
+import zio.system._
 import zio.console.{ putStrLn, Console }
 import zio.duration.Duration
 import zio.interop.catz._
@@ -36,9 +38,9 @@ object Main extends zio.App {
     with ReleaseChecker
 
   override def run(args: List[String]): ZIO[ZEnv, Nothing, Int] = {
-    val token = sys.env("BOT_TOKEN")
-
     val program = for {
+      token <- telegramBotToken
+
       subscriberMap   <- Ref.make(Map.empty[Name, Option[Version]])
       subscriptionMap <- Ref.make(Map.empty[ChatId, Set[Name]])
 
@@ -53,6 +55,12 @@ object Main extends zio.App {
       _ => ZIO.succeed(0)
     )
   }
+
+  private def telegramBotToken: RIO[System, String] =
+    for {
+      token <- system.env("BOT_TOKEN")
+      token <- ZIO.fromOption(token).mapError(_ => MissingBotToken)
+    } yield token
 
   private def buildHttpClient: RIO[ZEnv, Resource[Task, Client[Task]]] =
     ZIO

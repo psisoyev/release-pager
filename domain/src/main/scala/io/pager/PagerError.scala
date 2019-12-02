@@ -5,6 +5,10 @@ trait PagerError extends Throwable {
 }
 
 object PagerError {
+  case object MissingBotToken extends PagerError {
+    def message: String = s"Bot token is not set as environment variable"
+  }
+
   case class NotFound(url: String) extends PagerError {
     def message: String = s"$url not found"
   }
