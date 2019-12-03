@@ -6,7 +6,7 @@ import io.pager.client.github.{ GitHubClient, GitHubRelease }
 import io.pager.logging.Logger
 import io.pager.subscription.Repository.Name
 import io.pager.validation.GitHubRepositoryValidatorTestCases._
-import io.pager.validation.RepositoryValidator.GitHubRepositoryValidator
+import io.pager.validation.RepositoryValidator.GitHub
 import zio._
 import zio.test.Assertion._
 import zio.test._
@@ -17,7 +17,7 @@ object GitHubRepositoryValidatorTestCases {
   val specName: String = "GitHubRepositoryValidatorSpec"
 
   private def buildValidator(client: GitHubClient.Service): RepositoryValidator.Service =
-    new GitHubRepositoryValidator {
+    new GitHub {
       override val logger: Logger.Service             = Logger.Test
       override val gitHubClient: GitHubClient.Service = client
     }.repositoryValidator
