@@ -2,24 +2,24 @@ package io.pager
 
 import java.util.concurrent.TimeUnit
 
-import canoe.api.{TelegramClient => CanoeClient}
+import canoe.api.{ TelegramClient => CanoeClient }
 import cats.effect.Resource
 import io.pager.PagerError.MissingBotToken
 import io.pager.client.github.GitHubClient
 import io.pager.client.http.HttpClient
-import io.pager.client.telegram.{ChatId, ScenarioLogic, TelegramClient}
+import io.pager.client.telegram.{ ChatId, ScenarioLogic, TelegramClient }
 import io.pager.logging._
 import io.pager.lookup.ReleaseChecker
 import io.pager.subscription.ChatStorage.SubscriptionMap
-import io.pager.subscription.Repository.{Name, Version}
+import io.pager.subscription.Repository.{ Name, Version }
 import io.pager.subscription.RepositoryVersionStorage.SubscriberMap
-import io.pager.subscription.{ChatStorage, RepositoryVersionStorage, SubscriptionLogic}
+import io.pager.subscription.{ ChatStorage, RepositoryVersionStorage, SubscriptionLogic }
 import io.pager.validation.RepositoryValidator
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
 import zio._
 import zio.clock.Clock
-import zio.console.{Console, putStrLn}
+import zio.console.{ putStrLn, Console }
 import zio.duration.Duration
 import zio.interop.catz._
 import zio.system._
@@ -39,7 +39,7 @@ object Main extends zio.App {
       http4sClient <- buildHttpClient
       canoeClient  <- buildTelegramClient(token)
 
-      _ <- startProgram(subscriberMap, subscriptionMap, http4sClient, canoeClient)
+      _ <- buildProgram(subscriberMap, subscriptionMap, http4sClient, canoeClient)
     } yield ()
 
     program.foldM(
@@ -70,18 +70,18 @@ object Main extends zio.App {
         CanoeClient.global[Task](token)
       }
 
-  private def startProgram(
+  private def buildProgram(
     subscriberMap: Ref[Map[Name, Option[Version]]],
     subscriptionMap: Ref[Map[ChatId, Set[Name]]],
     http4sClient: Resource[Task, Client[Task]],
     canoeClient: Resource[Task, CanoeClient[Task]]
   ): Task[Int] = {
-    val startTelegramClient    = ZIO.accessM[TelegramClient](_.telegramClient.start).fork
+    val startTelegramClient = ZIO.accessM[TelegramClient](_.telegramClient.start).fork
     val scheduleReleaseChecker =
       ZIO
         .accessM[ReleaseCheckerEnv](_.releaseChecker.scheduleRefresh)
         .repeat(Schedule.fixed(Duration(1, TimeUnit.MINUTES)))
-    val program                = startTelegramClient *> scheduleReleaseChecker
+    val program = startTelegramClient *> scheduleReleaseChecker
 
     canoeClient.use { globalCanoeClient =>
       http4sClient.use { http4sClient =>

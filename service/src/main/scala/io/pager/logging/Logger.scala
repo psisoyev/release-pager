@@ -1,7 +1,7 @@
 package io.pager.logging
 
 import zio.UIO
-import zio.console.{Console => ConsoleZIO }
+import zio.console.{ Console => ConsoleZIO }
 import io.pager.ThrowableOps._
 
 trait Logger {
