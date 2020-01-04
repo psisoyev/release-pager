@@ -1,8 +1,8 @@
 package io.pager.logging
 
+import io.pager.ThrowableOps._
 import zio.UIO
 import zio.console.{ Console => ConsoleZIO }
-import io.pager.ThrowableOps._
 
 trait Logger {
   val logger: Logger.Service

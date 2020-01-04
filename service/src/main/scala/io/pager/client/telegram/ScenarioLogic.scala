@@ -26,7 +26,7 @@ object ScenarioLogic {
 
   trait CanoeScenarios extends ScenarioLogic[Scenario] {
     implicit def canoeClient: Client[Task]
-    def subscription: SubscriptionLogic.Service
+    def subscriptionLogic: SubscriptionLogic.Service[Any]
     def repositoryValidator: RepositoryValidator.Service
 
     override val scenarios: Service[Scenario] = new Service[Scenario] {
@@ -47,7 +47,7 @@ object ScenarioLogic {
         validated
           .foldM(
             e => chat.send(s"Couldn't add repository '$userInput': ${e.message}"),
-            name => chat.send(s"Added repository '$userInput'") *> subscription.subscribe(ChatId(chat.id), name)
+            name => chat.send(s"Added repository '$userInput'") *> subscriptionLogic.subscribe(ChatId(chat.id), name)
           )
           .unit
 
@@ -59,7 +59,7 @@ object ScenarioLogic {
           userInput <- Scenario.next(text)
           _         <- Scenario.eval(chat.send(s"Checking repository '$userInput'"))
           _ <- Scenario.eval {
-                subscription.unsubscribe(ChatId(chat.id), Name(userInput)) *>
+                subscriptionLogic.unsubscribe(ChatId(chat.id), Name(userInput)) *>
                   chat.send(s"Removed repository '$userInput' from your subscription list")
               }
         } yield ()
@@ -67,7 +67,7 @@ object ScenarioLogic {
       override def list: Scenario[Task, Unit] =
         for {
           chat  <- Scenario.start(command("list").chat)
-          repos <- Scenario.eval(subscription.listSubscriptions(ChatId(chat.id)))
+          repos <- Scenario.eval(subscriptionLogic.listSubscriptions(ChatId(chat.id)))
           _ <- {
             val result =
               if (repos.isEmpty) chat.send("You don't have subscriptions yet")

@@ -3,20 +3,23 @@ package io.pager.subscription
 import io.pager.client.telegram.ChatId
 import io.pager.logging.Logger
 import io.pager.subscription.Repository.{ Name, Version }
-import zio.{ Task, ZIO }
+import zio.macros.annotation.{ accessible, mockable }
+import zio.{ RIO, Task, ZIO }
 
+@mockable
+@accessible(">")
 trait SubscriptionLogic {
-  val subscription: SubscriptionLogic.Service
+  val subscriptionLogic: SubscriptionLogic.Service[Any]
 }
 
 object SubscriptionLogic {
-  trait Service {
-    def subscribe(chatId: ChatId, name: Name): Task[Unit]
-    def unsubscribe(chatId: ChatId, name: Name): Task[Unit]
-    def listSubscriptions(chatId: ChatId): Task[Set[Name]]
-    def listRepositories: Task[Map[Name, Option[Version]]]
-    def listSubscribers(name: Name): Task[Set[ChatId]]
-    def updateVersions(updatedVersions: Map[Name, Version]): Task[Unit]
+  trait Service[R] {
+    def subscribe(chatId: ChatId, name: Name): RIO[R, Unit]
+    def unsubscribe(chatId: ChatId, name: Name): RIO[R, Unit]
+    def listSubscriptions(chatId: ChatId): RIO[R, Set[Name]]
+    def listRepositories: RIO[R, Map[Name, Option[Version]]]
+    def listSubscribers(name: Name): RIO[R, Set[ChatId]]
+    def updateVersions(updatedVersions: Map[Name, Version]): RIO[R, Unit]
   }
 
   trait Live extends SubscriptionLogic {
@@ -24,7 +27,7 @@ object SubscriptionLogic {
     def chatStorage: ChatStorage.Service
     def repositoryVersionStorage: RepositoryVersionStorage.Service
 
-    override val subscription: Service = new Service {
+    override val subscriptionLogic: Service[Any] = new Service[Any] {
       override def subscribe(chatId: ChatId, name: Name): Task[Unit] =
         logger.info(s"$chatId subscribed to ${name.value}") *>
           chatStorage.subscribe(chatId, name) *>

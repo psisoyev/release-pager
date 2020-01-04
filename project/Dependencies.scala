@@ -6,6 +6,9 @@ object Dependencies {
   val zioTest = "dev.zio" %% "zio-test"     % Version.zio % "test"
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Version.zio % "test"
 
+  val zioMacro = "dev.zio" %% "zio-macros-core" % Version.zioMacro
+  val zioMacroTest = "dev.zio" %% "zio-macros-test" % Version.zioMacro
+
   val fs2Core = "co.fs2" %% "fs2-core" % Version.fs2Core
 
   val doobieCore = "org.tpolecat" %% "doobie-core" % Version.doobie
@@ -29,6 +32,7 @@ object Dependencies {
 object Version {
   val zio = "1.0.0-RC17"
   val zioCats = "2.0.0.0-RC10"
+  val zioMacro = "0.6.0"
   val fs2Core = "2.0.1"
   val slf4j = "1.7.28"
   val kindProjector = "0.10.3"

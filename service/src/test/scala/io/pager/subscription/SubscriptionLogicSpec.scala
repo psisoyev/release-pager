@@ -1,95 +1,119 @@
 package io.pager.subscription
 
+import io.pager.Generators
+import io.pager.TestData.{ chatId1, chatId2 }
 import io.pager.client.telegram.ChatId
 import io.pager.logging.Logger
-import io.pager.subscription.Repository.Name
+import io.pager.subscription.Repository.{ Name, Version }
 import io.pager.subscription.SubscriptionLogicTestCases._
 import zio._
 import zio.test.Assertion._
 import zio.test._
 
-object SubscriptionLogicSpec extends DefaultRunnableSpec(suite(specName)(seq: _*))
+object SubscriptionLogicSpec extends DefaultRunnableSpec(suite(specName)(scenarios: _*))
 
 object SubscriptionLogicTestCases {
   val specName: String = "SubscriptionLogicSpec"
 
-  private def repo: UIO[SubscriptionLogic.Service] =
+  private def repo: UIO[SubscriptionLogic.Service[Any]] =
     for {
-      repositories <- RepositoryVersionStorage.Test.instance
-      chats        <- ChatStorage.Test.instance
-    } yield new SubscriptionLogic.Live {
-      override def logger: Logger.Service                                     = Logger.Test
-      override def chatStorage: ChatStorage.Service                           = chats
-      override def repositoryVersionStorage: RepositoryVersionStorage.Service = repositories
-    }.subscription
+      repositoryMap   <- Ref.make(Map.empty[Name, Option[Version]])
+      subscriptionMap <- Ref.make(Map.empty[ChatId, Set[Name]])
+    } yield {
+      val testChatStorage              = ChatStorage.Test.make(subscriptionMap).chatStorage
+      val testRepositoryVersionStorage = RepositoryVersionStorage.Test.make(repositoryMap).repositoryVersionStorage
 
-  private val chatId1 = ChatId(478912)
-  private val chatId2 = ChatId(478913)
-  private val url     = Name("https://github.com/zio/zio")
+      new SubscriptionLogic.Live {
+        override def logger: Logger.Service                                     = Logger.Test
+        override def chatStorage: ChatStorage.Service                           = testChatStorage
+        override def repositoryVersionStorage: RepositoryVersionStorage.Service = testRepositoryVersionStorage
+      }.subscriptionLogic
+    }
 
-  val seq = Seq(
+  val scenarios = Seq(
     testM("successfully subscribe to a repository") {
-      for {
-        repo           <- repo
-        _              <- repo.subscribe(chatId1, url)
-        repositories   <- repo.listRepositories
-        subscriptions1 <- repo.listSubscriptions(chatId1)
-        subscriptions2 <- repo.listSubscriptions(chatId2)
-      } yield {
-        assert(repositories, equalTo(Set(url)))
-        assert(subscriptions1, equalTo(Set(url)))
-        assert(subscriptions2, equalTo(Set()))
+      checkM(Generators.repositoryName) { name =>
+        for {
+          repo           <- repo
+          _              <- repo.subscribe(chatId1, name)
+          repositories   <- repo.listRepositories
+          subscriptions1 <- repo.listSubscriptions(chatId1)
+          subscriptions2 <- repo.listSubscriptions(chatId2)
+          subscribers    <- repo.listSubscribers(name)
+        } yield {
+          assert(repositories, equalTo(Set(name)))
+          assert(subscriptions1, equalTo(Set(name)))
+          assert(subscriptions2, equalTo(Set()))
+          assert(subscribers, equalTo(Set(chatId1)))
+        }
       }
     },
     testM("successfully subscribe to a repository twice") {
-      for {
-        repo           <- repo
-        _              <- repo.subscribe(chatId1, url)
-        _              <- repo.subscribe(chatId1, url)
-        repositories   <- repo.listRepositories
-        subscriptions1 <- repo.listSubscriptions(chatId1)
-        subscriptions2 <- repo.listSubscriptions(chatId2)
-      } yield {
-        assert(repositories, equalTo(Set(url)))
-        assert(subscriptions1, equalTo(Set(url)))
-        assert(subscriptions2, equalTo(Set()))
+      checkM(Generators.repositoryName) { name =>
+        for {
+          repo           <- repo
+          _              <- repo.subscribe(chatId1, name)
+          _              <- repo.subscribe(chatId1, name)
+          repositories   <- repo.listRepositories
+          subscriptions1 <- repo.listSubscriptions(chatId1)
+          subscriptions2 <- repo.listSubscriptions(chatId2)
+          subscribers    <- repo.listSubscribers(name)
+        } yield {
+          assert(repositories, equalTo(Set(name)))
+          assert(subscriptions1, equalTo(Set(name)))
+          assert(subscriptions2, equalTo(Set()))
+          assert(subscribers, equalTo(Set(chatId1)))
+        }
       }
     },
     testM("successfully subscribe to a repository from two chats") {
-      for {
-        repo           <- repo
-        _              <- repo.subscribe(chatId1, url)
-        _              <- repo.subscribe(chatId2, url)
-        repositories   <- repo.listRepositories
-        subscriptions1 <- repo.listSubscriptions(chatId1)
-        subscriptions2 <- repo.listSubscriptions(chatId2)
-      } yield {
-        assert(repositories, equalTo(Set(url)))
-        assert(subscriptions1, equalTo(Set(url)))
-        assert(subscriptions2, equalTo(Set(url)))
+      checkM(Generators.repositoryName) { name =>
+        for {
+          repo           <- repo
+          _              <- repo.subscribe(chatId1, name)
+          _              <- repo.subscribe(chatId2, name)
+          repositories   <- repo.listRepositories
+          subscriptions1 <- repo.listSubscriptions(chatId1)
+          subscriptions2 <- repo.listSubscriptions(chatId2)
+          subscribers    <- repo.listSubscribers(name)
+        } yield {
+          assert(repositories, equalTo(Set(name)))
+          assert(subscriptions1, equalTo(Set(name)))
+          assert(subscriptions2, equalTo(Set(name)))
+          assert(subscribers, equalTo(Set(chatId1, chatId2)))
+        }
       }
     },
     testM("allow to unsubscribe from non-subscribed repository") {
-      for {
-        repo          <- repo
-        _             <- repo.unsubscribe(chatId1, url)
-        repositories  <- repo.listRepositories
-        subscriptions <- repo.listSubscriptions(chatId1)
-      } yield {
-        assert(repositories, equalTo(Set()))
-        assert(subscriptions, equalTo(Set()))
+      checkM(Generators.repositoryName) { name =>
+        for {
+          repo          <- repo
+          _             <- repo.unsubscribe(chatId1, name)
+          repositories  <- repo.listRepositories
+          subscriptions <- repo.listSubscriptions(chatId1)
+          subscribers   <- repo.listSubscribers(name)
+        } yield {
+          assert(repositories, equalTo(Set()))
+          assert(subscriptions, equalTo(Set()))
+          assert(subscribers, equalTo(Set()))
+
+        }
       }
     },
     testM("allow to unsubscribe from subscribed repository") {
-      for {
-        repo          <- repo
-        _             <- repo.subscribe(chatId1, url)
-        _             <- repo.unsubscribe(chatId1, url)
-        repositories  <- repo.listRepositories
-        subscriptions <- repo.listSubscriptions(chatId1)
-      } yield {
-        assert(repositories, equalTo(Set()))
-        assert(subscriptions, equalTo(Set()))
+      checkM(Generators.repositoryName) { name =>
+        for {
+          repo          <- repo
+          _             <- repo.subscribe(chatId1, name)
+          _             <- repo.unsubscribe(chatId1, name)
+          repositories  <- repo.listRepositories
+          subscriptions <- repo.listSubscriptions(chatId1)
+          subscribers   <- repo.listSubscribers(name)
+        } yield {
+          assert(repositories, equalTo(Set()))
+          assert(subscriptions, equalTo(Set()))
+          assert(subscribers, equalTo(Set()))
+        }
       }
     }
   )

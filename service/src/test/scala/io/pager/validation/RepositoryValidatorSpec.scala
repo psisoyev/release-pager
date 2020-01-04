@@ -5,39 +5,39 @@ import io.pager.PagerError.NotFound
 import io.pager.client.github.{ GitHubClient, GitHubRelease }
 import io.pager.logging.Logger
 import io.pager.subscription.Repository.Name
-import io.pager.validation.GitHubRepositoryValidatorTestCases._
+import io.pager.validation.RepositoryValidatorTestCases._
 import io.pager.validation.RepositoryValidator.GitHub
 import zio._
 import zio.test.Assertion._
 import zio.test._
 
-object GitHubRepositoryValidatorSpec extends DefaultRunnableSpec(suite(specName)(seq: _*))
+object RepositoryValidatorSpec extends DefaultRunnableSpec(suite(specName)(scenarios: _*))
 
-object GitHubRepositoryValidatorTestCases {
-  val specName: String = "GitHubRepositoryValidatorSpec"
+object RepositoryValidatorTestCases {
+  val specName: String = "RepositoryValidatorSpec"
 
-  private def buildValidator(client: GitHubClient.Service): RepositoryValidator.Service =
+  private def buildValidator(client: GitHubClient.Service[Any]): RepositoryValidator.Service =
     new GitHub {
-      override val logger: Logger.Service             = Logger.Test
-      override val gitHubClient: GitHubClient.Service = client
+      override val logger: Logger.Service                  = Logger.Test
+      override val gitHubClient: GitHubClient.Service[Any] = client
     }.repositoryValidator
 
   private val notFound = NotFound("ololo")
 
   private val succeedingValidator = buildValidator {
-    new GitHubClient.Service {
+    new GitHubClient.Service[Any] {
       override def repositoryExists(name: Name): IO[PagerError, Name]        = IO.succeed(name)
       override def releases(name: Name): IO[PagerError, List[GitHubRelease]] = ???
     }
   }
   private val failingValidator = buildValidator {
-    new GitHubClient.Service {
+    new GitHubClient.Service[Any] {
       override def repositoryExists(name: Name): IO[PagerError, Name]        = IO.fail(notFound)
       override def releases(name: Name): IO[PagerError, List[GitHubRelease]] = ???
     }
   }
 
-  val seq = Seq(
+  val scenarios = Seq(
     testM("successfully validate existing repository by name") {
       val repo = "zio/zio"
 

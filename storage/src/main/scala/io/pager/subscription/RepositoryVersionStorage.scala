@@ -41,12 +41,7 @@ object RepositoryVersionStorage {
   }
 
   object Test {
-    def instance: UIO[RepositoryVersionStorage.Service] =
-      Ref
-        .make(Map.empty[Name, Option[Version]])
-        .map { subscriberMap =>
-          new InMemory { def subscribers: Ref[SubscriberMap] = subscriberMap }
-        }
-        .map(_.repositoryVersionStorage)
+    def make(state: Ref[Map[Name, Option[Version]]]): RepositoryVersionStorage =
+      new InMemory { def subscribers: Ref[SubscriberMap] = state }
   }
 }

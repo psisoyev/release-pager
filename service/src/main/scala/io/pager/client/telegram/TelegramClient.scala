@@ -7,15 +7,18 @@ import canoe.models.outgoing.TextContent
 import io.pager.logging.Logger
 import zio._
 import zio.interop.catz._
+import zio.macros.annotation.{ accessible, mockable }
 
+@mockable
+@accessible(">")
 trait TelegramClient {
-  val telegramClient: TelegramClient.Service
+  val telegramClient: TelegramClient.Service[Any]
 }
 
 object TelegramClient {
-  trait Service {
-    def start: Task[Unit]
-    def broadcastMessage(subscribers: Set[ChatId], message: String): Task[Unit]
+  trait Service[R] {
+    def start: RIO[R, Unit]
+    def broadcastMessage(subscribers: Set[ChatId], message: String): RIO[R, Unit]
   }
 
   trait Canoe extends TelegramClient {
@@ -23,7 +26,7 @@ object TelegramClient {
     def logger: Logger.Service
     def scenarios: ScenarioLogic.Service[Scenario]
 
-    override val telegramClient: Service = new Service {
+    override val telegramClient: Service[Any] = new Service[Any] {
       def broadcastMessage(subscribers: Set[ChatId], message: String): Task[Unit] =
         ZIO
           .traverse(subscribers) { chatId =>

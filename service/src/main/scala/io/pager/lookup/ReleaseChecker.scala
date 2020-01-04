@@ -21,19 +21,19 @@ object ReleaseChecker {
 
   trait Live extends ReleaseChecker {
     def logger: Logger.Service
-    def gitHubClient: GitHubClient.Service
-    def telegramClient: TelegramClient.Service
-    def subscription: SubscriptionLogic.Service
+    def gitHubClient: GitHubClient.Service[Any]
+    def telegramClient: TelegramClient.Service[Any]
+    def subscriptionLogic: SubscriptionLogic.Service[Any]
 
     override val releaseChecker: Service = new Service {
 
       override def scheduleRefresh: Task[Unit] =
         for {
           _               <- logger.info("Getting latest repository versions")
-          repos           <- subscription.listRepositories
+          repos           <- subscriptionLogic.listRepositories
           latestVersions  <- latestRepositoryVersions(repos.keySet)
           updatedVersions = newVersions(repos, latestVersions)
-          _               <- subscription.updateVersions(updatedVersions)
+          _               <- subscriptionLogic.updateVersions(updatedVersions)
           statuses        <- repositoryStates(updatedVersions)
           _               <- broadcastUpdates(statuses)
           _               <- logger.info("Finished repository refresh")
@@ -41,13 +41,12 @@ object ReleaseChecker {
     }
 
     private def repositoryStates(updatedVersions: Map[Name, Version]): Task[List[Repository]] =
-      ZIO
-        .foreach(updatedVersions) {
-          case (name, version) =>
-            subscription
-              .listSubscribers(name)
-              .map(subscribers => Repository(name, version, subscribers))
-        }
+      ZIO.foreach(updatedVersions) {
+        case (name, version) =>
+          subscriptionLogic
+            .listSubscribers(name)
+            .map(subscribers => Repository(name, version, subscribers))
+      }
 
     private def latestRepositoryVersions(repos: Set[Name]): IO[PagerError, Map[Name, Option[Version]]] =
       ZIO

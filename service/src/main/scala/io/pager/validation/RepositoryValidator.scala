@@ -17,7 +17,7 @@ object RepositoryValidator {
 
   trait GitHub extends RepositoryValidator {
     val logger: Logger.Service
-    val gitHubClient: GitHubClient.Service
+    val gitHubClient: GitHubClient.Service[Any]
 
     def repositoryValidator: RepositoryValidator.Service = new RepositoryValidator.Service {
       def validate(name: String): IO[PagerError, Name] =
