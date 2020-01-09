@@ -3,8 +3,11 @@ import org.scalafmt.sbt.ScalafmtPlugin.autoImport.scalafmtOnCompile
 import sbt.Keys.{scalacOptions, _}
 import sbt._
 import sbt.util.Level
+import wartremover._
 
 object Settings {
+  val warts = Warts.allBut(Wart.Any, Wart.TraversableOps, Wart.StringPlusAny, Wart.Nothing, Wart.Overloading, Wart.JavaSerializable, Wart.PublicInference, Wart.Serializable)
+
   val commonSettings = {
     Seq(
       scalaVersion := "2.13.1",
@@ -25,6 +28,8 @@ object Settings {
       logLevel := Level.Info,
       version := (version in ThisBuild).value,
       scalafmtOnCompile := true,
+      wartremoverErrors in (Compile, compile) ++= warts,
+      wartremoverErrors in (Test, compile) ++= warts,
       testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
     )
   }
