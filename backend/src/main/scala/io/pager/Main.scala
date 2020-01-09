@@ -43,7 +43,7 @@ object Main extends zio.App {
     } yield ()
 
     program.foldM(
-      err => putStrLn(s"Execution failed with: $err") *> ZIO.succeed(1),
+      err => putStrLn(s"Execution failed with: ${err.getMessage}") *> ZIO.succeed(1),
       _ => ZIO.succeed(0)
     )
   }
@@ -51,7 +51,7 @@ object Main extends zio.App {
   private def telegramBotToken: RIO[System, String] =
     for {
       token <- system.env("BOT_TOKEN")
-      token <- ZIO.fromOption(token).mapError(_ => MissingBotToken)
+      token <- ZIO.fromOption(token).asError(MissingBotToken)
     } yield token
 
   private def buildHttpClient: RIO[ZEnv, Resource[Task, Client[Task]]] =
