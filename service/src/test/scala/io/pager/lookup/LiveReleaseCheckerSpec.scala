@@ -1,8 +1,9 @@
 package io.pager.lookup
 
-import io.pager.Generators
+import io.pager.Generators._
 import io.pager.PagerError.NotFound
 import io.pager.TestData._
+import io.pager.TestScenarios
 import io.pager.client.github.GitHubClient
 import io.pager.client.telegram.TelegramClient
 import io.pager.logging.Logger
@@ -19,7 +20,7 @@ object LiveReleaseCheckerSpec extends DefaultRunnableSpec(suite(specName)(scenar
 object LiveReleaseCheckerTestCases {
   val specName: String = "LiveReleaseCheckerSpec"
 
-  val scenarios = List(
+  val scenarios: TestScenarios = List(
     testM("Do not call services if there are no repositories") {
       val gitHubClientMocks   = Expectation.nothing[GitHubClient]
       val telegramClientMocks = Expectation.nothing[TelegramClient]
@@ -30,7 +31,7 @@ object LiveReleaseCheckerTestCases {
       scheduleRefreshSpec(subscriptionMocks, telegramClientMocks, gitHubClientMocks)
     },
     testM("Do not bother subscribers if there are no version updates") {
-      checkM(Generators.repositoryName) { name =>
+      checkM(repositoryName) { name =>
         val repositories = Map(name -> Some(finalVersion))
 
         val gitHubClientMocks   = GitHubClient.releases(equalTo(name)) returns value(List(finalRelease))
@@ -43,7 +44,7 @@ object LiveReleaseCheckerTestCases {
       }
     },
     testM("Update repository version for the very first time") {
-      checkM(Generators.repositoryName) { name =>
+      checkM(repositoryName) { name =>
         val repositories = Map(name -> None)
 
         val gitHubClientMocks   = GitHubClient.releases(equalTo(name)) returns value(List(finalRelease))
@@ -56,9 +57,10 @@ object LiveReleaseCheckerTestCases {
         scheduleRefreshSpec(subscriptionMocks, telegramClientMocks, gitHubClientMocks)
       }
     },
-    testM("Notify users when new version has found") {
-      checkM(Generators.repositoryName) { name =>
+    testM("Notify users about new release") {
+      checkM(repositoryName, chatIds) { (name, (chatId1, chatId2)) =>
         val repositories = Map(name -> Some(rcVersion))
+        val subscribers  = Set(chatId1, chatId2)
 
         val gitHubClientMocks   = GitHubClient.releases(equalTo(name)) returns value(releases)
         val telegramClientMocks = TelegramClient.broadcastMessage(equalTo((subscribers, message(name)))) returns unit
@@ -71,7 +73,7 @@ object LiveReleaseCheckerTestCases {
       }
     },
     testM("GitHub client error should be handled") {
-      checkM(Generators.repositoryName) { name =>
+      checkM(repositoryName) { name =>
         val repositories        = Map(name -> Some(rcVersion))
         val error               = NotFound(name.value)
         val gitHubClientMocks   = GitHubClient.releases(equalTo(name)) returns failure(error)
@@ -88,21 +90,9 @@ object LiveReleaseCheckerTestCases {
     subscriptionMocks: UManaged[SubscriptionLogic],
     telegramClientMocks: UManaged[TelegramClient],
     gitHubClientMocks: UManaged[GitHubClient]
-  ): Task[TestResult] = {
-    val mocks = subscriptionMocks &&& telegramClientMocks &&& gitHubClientMocks
-
-    val service = mocks.map {
-      case ((sl, tc), gc) =>
-        new ReleaseChecker.Live {
-          override def logger: Logger.Service                            = Logger.Test
-          override def gitHubClient: GitHubClient.Service[Any]           = gc.gitHubClient
-          override def telegramClient: TelegramClient.Service[Any]       = tc.telegramClient
-          override def subscriptionLogic: SubscriptionLogic.Service[Any] = sl.subscriptionLogic
-        }
-    }
-
-    service
-      .use(_.releaseChecker.scheduleRefresh)
+  ): Task[TestResult] =
+    (subscriptionMocks &&& telegramClientMocks &&& gitHubClientMocks)
+      .map { case ((sl, tc), gc) => ReleaseChecker.Live.make(Logger.Test, gc, tc, sl) }
+      .use(_.scheduleRefresh)
       .as(assertCompletes)
-  }
 }
