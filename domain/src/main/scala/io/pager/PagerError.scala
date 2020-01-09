@@ -1,23 +1,24 @@
 package io.pager
 
-trait PagerError extends Throwable {
+sealed trait PagerError extends Throwable {
   def message: String
+  override def getMessage: String = message
 }
 
 object PagerError {
-  case object MissingBotToken extends PagerError {
-    def message: String = s"Bot token is not set as environment variable"
+  final case object MissingBotToken extends PagerError {
+    def message: String = "Bot token is not set as environment variable"
   }
 
-  case class NotFound(url: String) extends PagerError {
+  final case class NotFound(url: String) extends PagerError {
     def message: String = s"$url not found"
   }
 
-  case class MalformedUrl(url: String) extends PagerError {
+  final case class MalformedUrl(url: String) extends PagerError {
     def message: String = s"Couldn't build url for repository: $url"
   }
 
-  case class UnexpectedError(text: String) extends PagerError {
+  final case class UnexpectedError(text: String) extends PagerError {
     def message: String = text
   }
 
