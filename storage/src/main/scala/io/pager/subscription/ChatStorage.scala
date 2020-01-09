@@ -55,7 +55,7 @@ object ChatStorage {
   }
 
   object Test {
-    def make(state: Ref[Map[ChatId, Set[Name]]]): ChatStorage =
-      new ChatStorage.InMemory { def subscriptions: Ref[SubscriptionMap] = state }
+    def make(state: Ref[Map[ChatId, Set[Name]]]): ChatStorage.Service =
+      new ChatStorage.InMemory { def subscriptions: Ref[SubscriptionMap] = state }.chatStorage
   }
 }

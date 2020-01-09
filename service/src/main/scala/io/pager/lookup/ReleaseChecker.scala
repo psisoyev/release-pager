@@ -76,4 +76,19 @@ object ReleaseChecker {
         }
         .unit
   }
+
+  object Live {
+    def make(
+      logger: Logger.Service,
+      gc: GitHubClient,
+      tc: TelegramClient,
+      sl: SubscriptionLogic
+    ): ReleaseChecker.Service =
+      new ReleaseChecker.Live {
+        override def logger: Logger.Service                            = Logger.Test
+        override def gitHubClient: GitHubClient.Service[Any]           = gc.gitHubClient
+        override def telegramClient: TelegramClient.Service[Any]       = tc.telegramClient
+        override def subscriptionLogic: SubscriptionLogic.Service[Any] = sl.subscriptionLogic
+      }.releaseChecker
+  }
 }

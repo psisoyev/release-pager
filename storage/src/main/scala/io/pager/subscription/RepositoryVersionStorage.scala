@@ -41,7 +41,7 @@ object RepositoryVersionStorage {
   }
 
   object Test {
-    def make(state: Ref[Map[Name, Option[Version]]]): RepositoryVersionStorage =
-      new InMemory { def subscribers: Ref[SubscriberMap] = state }
+    def make(state: Ref[Map[Name, Option[Version]]]): RepositoryVersionStorage.Service =
+      new InMemory { def subscribers: Ref[SubscriberMap] = state }.repositoryVersionStorage
   }
 }

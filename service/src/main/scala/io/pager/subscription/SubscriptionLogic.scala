@@ -2,12 +2,11 @@ package io.pager.subscription
 
 import io.pager.client.telegram.ChatId
 import io.pager.logging.Logger
-import io.pager.subscription.Repository.{ Name, Version }
-import zio.macros.annotation.{ accessible, mockable }
-import zio.{ RIO, Task, ZIO }
+import io.pager.subscription.Repository.{Name, Version}
+import zio.macros.annotation.mockable
+import zio.{RIO, Task, ZIO}
 
 @mockable
-@accessible(">")
 trait SubscriptionLogic {
   val subscriptionLogic: SubscriptionLogic.Service[Any]
 }
@@ -34,11 +33,11 @@ object SubscriptionLogic {
           repositoryVersionStorage.addRepository(name)
 
       override def unsubscribe(chatId: ChatId, name: Name): Task[Unit] =
-        logger.info(s"$chatId unsubscribed from ${name.value}") *>
+        logger.info(s"Chat ${chatId.value} unsubscribed from ${name.value}") *>
           chatStorage.unsubscribe(chatId, name)
 
       override def listSubscriptions(chatId: ChatId): Task[Set[Name]] =
-        logger.info(s"$chatId requested subscriptions") *>
+        logger.info(s"Chat ${chatId.value} requested subscriptions") *>
           chatStorage.listSubscriptions(chatId)
 
       override def listRepositories: Task[Map[Name, Option[Version]]] =
@@ -46,17 +45,30 @@ object SubscriptionLogic {
           repositoryVersionStorage.listRepositories
 
       override def listSubscribers(name: Name): Task[Set[ChatId]] =
-        logger.info(s"Listing repository $name subscribers") *>
+        logger.info(s"Listing repository ${name.value} subscribers") *>
           chatStorage.listSubscribers(name)
 
       override def updateVersions(updatedVersions: Map[Name, Version]): Task[Unit] =
         ZIO
           .foreach(updatedVersions) {
             case (name, version) =>
-              logger.info(s"Updating repository $name version to $version") *>
+              logger.info(s"Updating repository ${name.value} version to $version") *>
                 repositoryVersionStorage.updateVersion(name, version)
           }
           .unit
     }
+  }
+
+  object Live {
+    def make(
+      logger: Logger.Service,
+      chatStorageService: ChatStorage.Service,
+      repositoryVersionStorageService: RepositoryVersionStorage.Service
+    ): SubscriptionLogic.Service[Any] =
+      new SubscriptionLogic.Live {
+        override def logger: Logger.Service                                     = Logger.Test
+        override def chatStorage: ChatStorage.Service                           = chatStorageService
+        override def repositoryVersionStorage: RepositoryVersionStorage.Service = repositoryVersionStorageService
+      }.subscriptionLogic
   }
 }
