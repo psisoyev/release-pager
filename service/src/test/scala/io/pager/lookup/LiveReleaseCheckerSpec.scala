@@ -58,7 +58,7 @@ object LiveReleaseCheckerTestCases {
       }
     },
     testM("Notify users about new release") {
-      checkM(repositoryName, chatIds) { (name, (chatId1, chatId2)) =>
+      checkM(repositoryName, chatIds) { case (name, (chatId1, chatId2)) =>
         val repositories = Map(name -> Some(rcVersion))
         val subscribers  = Set(chatId1, chatId2)
 
@@ -91,8 +91,7 @@ object LiveReleaseCheckerTestCases {
     telegramClientMocks: UManaged[TelegramClient],
     gitHubClientMocks: UManaged[GitHubClient]
   ): Task[TestResult] =
-    (subscriptionMocks &&& telegramClientMocks &&& gitHubClientMocks)
-      .map { case ((sl, tc), gc) => ReleaseChecker.Live.make(Logger.Test, gc, tc, sl) }
+    (subscriptionMocks &&& telegramClientMocks &&& gitHubClientMocks).map { case ((sl, tc), gc) => ReleaseChecker.Live.make(Logger.Test, gc, tc, sl) }
       .use(_.scheduleRefresh)
       .as(assertCompletes)
 }

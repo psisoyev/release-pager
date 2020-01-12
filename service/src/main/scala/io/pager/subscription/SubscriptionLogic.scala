@@ -2,9 +2,9 @@ package io.pager.subscription
 
 import io.pager.client.telegram.ChatId
 import io.pager.logging.Logger
-import io.pager.subscription.Repository.{Name, Version}
+import io.pager.subscription.Repository.{ Name, Version }
 import zio.macros.annotation.mockable
-import zio.{RIO, Task, ZIO}
+import zio.{ RIO, Task, ZIO }
 
 @mockable
 trait SubscriptionLogic {
