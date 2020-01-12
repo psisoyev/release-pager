@@ -1,7 +1,7 @@
-package io.pager.subscription
+package io.pager
+package subscription
 
 import io.pager.Generators._
-import io.pager.TestScenarios
 import io.pager.client.telegram.ChatId
 import io.pager.logging.Logger
 import io.pager.subscription.Repository.{ Name, Version }
@@ -9,16 +9,22 @@ import io.pager.subscription.SubscriptionLogicTestCases._
 import zio._
 import zio.test.Assertion._
 import zio.test._
+import TestData._
 
 object SubscriptionLogicSpec extends DefaultRunnableSpec(suite(specName)(scenarios: _*))
 
 object SubscriptionLogicTestCases {
   val specName: String = "SubscriptionLogicSpec"
+  type RepositoryMap   = UIO[Ref[Map[Name, Option[Version]]]]
+  type SubscriptionMap = UIO[Ref[Map[ChatId, Set[Repository.Name]]]]
 
-  private def service: UIO[SubscriptionLogic.Service[Any]] =
+  private def service(
+    subscriptionMap: SubscriptionMap = emptyMap[ChatId, Set[Name]],
+    repositoryMap: RepositoryMap = emptyMap[Name, Option[Version]]
+  ): UIO[SubscriptionLogic.Service[Any]] =
     for {
-      repositoryMap   <- Ref.make(Map.empty[Name, Option[Version]])
-      subscriptionMap <- Ref.make(Map.empty[ChatId, Set[Name]])
+      repositoryMap   <- repositoryMap
+      subscriptionMap <- subscriptionMap
     } yield {
       val chatStorage              = ChatStorage.Test.make(subscriptionMap)
       val repositoryVersionStorage = RepositoryVersionStorage.Test.make(repositoryMap)
@@ -31,55 +37,48 @@ object SubscriptionLogicTestCases {
     }
 
   val scenarios: TestScenarios = List(
-    testM("successfully subscribe to a repository") {
-      checkM(repositoryName, chatId) { (name, chatId) =>
-        for {
-          service        <- service
-          _              <- service.subscribe(chatId, name)
-          repositories   <- service.listRepositories
-          subscriptions1 <- service.listSubscriptions(chatId)
-          subscribers    <- service.listSubscribers(name)
-        } yield {
-          assert(repositories, equalTo(Set(name))) &&
-          assert(subscriptions1, equalTo(Set(name))) &&
-          assert(subscribers, equalTo(Set(chatId)))
-        }
+    testM("return empty subscriptions") {
+      checkM(repositoryName, chatId) {
+        case (name, chatId) =>
+          for {
+            service       <- service()
+            subscriptions <- service.listSubscriptions(chatId)
+            subscribers   <- service.listSubscribers(name)
+          } yield {
+            assert(subscriptions, isEmpty) &&
+            assert(subscribers, isEmpty)
+          }
       }
     },
     testM("successfully subscribe to a repository") {
-      checkM(repositoryName, chatIds) {
-        case (name, (chatId1, chatId2)) =>
+      checkM(repositoryName, chatId) {
+        case (name, chatId) =>
           for {
-            service        <- service
-            _              <- service.subscribe(chatId1, name)
-            repositories   <- service.listRepositories
-            subscriptions1 <- service.listSubscriptions(chatId1)
-            subscriptions2 <- service.listSubscriptions(chatId2)
-            subscribers    <- service.listSubscribers(name)
+            service       <- service()
+            _             <- service.subscribe(chatId, name)
+            repositories  <- service.listRepositories
+            subscriptions <- service.listSubscriptions(chatId)
+            subscribers   <- service.listSubscribers(name)
           } yield {
-            assert(repositories, equalTo(Set(name))) &&
-            assert(subscriptions1, equalTo(Set(name))) &&
-            assert(subscriptions2, equalTo(Set())) &&
-            assert(subscribers, equalTo(Set(chatId1)))
+            assert(repositories, equalTo(Map(name -> None))) &&
+            assert(subscriptions, equalTo(Set(name))) &&
+            assert(subscribers, equalTo(Set(chatId)))
           }
       }
     },
     testM("successfully subscribe to a repository twice") {
-      checkM(repositoryName, chatIds) {
-        case (name, (chatId1, chatId2)) =>
+      checkM(repositoryName, chatId) {
+        case (name, chatId) =>
           for {
-            service        <- service
-            _              <- service.subscribe(chatId1, name)
-            _              <- service.subscribe(chatId1, name)
-            repositories   <- service.listRepositories
-            subscriptions1 <- service.listSubscriptions(chatId1)
-            subscriptions2 <- service.listSubscriptions(chatId2)
-            subscribers    <- service.listSubscribers(name)
+            service       <- service(mkMap(Map(chatId -> Set(name))))
+            _             <- service.subscribe(chatId, name)
+            repositories  <- service.listRepositories
+            subscriptions <- service.listSubscriptions(chatId)
+            subscribers   <- service.listSubscribers(name)
           } yield {
-            assert(repositories, equalTo(Set(name))) &&
-            assert(subscriptions1, equalTo(Set(name))) &&
-            assert(subscriptions2, equalTo(Set())) &&
-            assert(subscribers, equalTo(Set(chatId1)))
+            assert(repositories, equalTo(Map(name -> None))) &&
+            assert(subscriptions, equalTo(Set(name))) &&
+            assert(subscribers, equalTo(Set(chatId)))
           }
       }
     },
@@ -87,7 +86,7 @@ object SubscriptionLogicTestCases {
       checkM(repositoryName, chatIds) {
         case (name, (chatId1, chatId2)) =>
           for {
-            service        <- service
+            service        <- service()
             _              <- service.subscribe(chatId1, name)
             _              <- service.subscribe(chatId2, name)
             repositories   <- service.listRepositories
@@ -95,42 +94,54 @@ object SubscriptionLogicTestCases {
             subscriptions2 <- service.listSubscriptions(chatId2)
             subscribers    <- service.listSubscribers(name)
           } yield {
-            assert(repositories, equalTo(Set(name))) &&
+            assert(repositories, equalTo(Map(name -> None))) &&
             assert(subscriptions1, equalTo(Set(name))) &&
             assert(subscriptions2, equalTo(Set(name))) &&
             assert(subscribers, equalTo(Set(chatId1, chatId2)))
           }
       }
     },
-    testM("allow to unsubscribe from non-subscribed repository") {
-      checkM(repositoryName, chatId) { (name, chatId1) =>
+    testM("successfully unsubscribe from non-subscribed repository") {
+      checkM(repositoryName, chatId) { (name, chatId) =>
         for {
-          service       <- service
-          _             <- service.unsubscribe(chatId1, name)
+          service       <- service()
+          _             <- service.unsubscribe(chatId, name)
           repositories  <- service.listRepositories
-          subscriptions <- service.listSubscriptions(chatId1)
+          subscriptions <- service.listSubscriptions(chatId)
           subscribers   <- service.listSubscribers(name)
         } yield {
-          assert(repositories, equalTo(Set())) &&
-          assert(subscriptions, equalTo(Set())) &&
-          assert(subscribers, equalTo(Set()))
-
+          assert(repositories, isEmpty) &&
+          assert(subscriptions, isEmpty) &&
+          assert(subscribers, isEmpty)
         }
       }
     },
-    testM("allow to unsubscribe from subscribed repository") {
-      checkM(repositoryName, chatId) { (name, chatId1) =>
+    testM("successfully unsubscribe from subscribed repository") {
+      checkM(repositoryName, chatId) { (name, chatId) =>
         for {
-          service       <- service
-          _             <- service.subscribe(chatId1, name)
-          _             <- service.unsubscribe(chatId1, name)
+          service       <- service(mkMap(Map(chatId -> Set(name))))
+          _             <- service.unsubscribe(chatId, name)
           repositories  <- service.listRepositories
-          subscriptions <- service.listSubscriptions(chatId1)
+          subscriptions <- service.listSubscriptions(chatId)
           subscribers   <- service.listSubscribers(name)
         } yield {
-          assert(repositories, equalTo(Set())) &&
-          assert(subscriptions, equalTo(Set())) &&
-          assert(subscribers, equalTo(Set()))
+          assert(repositories, isEmpty) &&
+          assert(subscriptions, isEmpty) &&
+          assert(subscribers, isEmpty)
+        }
+      }
+    },
+    testM("update repository version") {
+      checkM(repositoryName) { name =>
+        for {
+          service       <- service(repositoryMap = mkMap(Map(name -> None)))
+          _             <- service.updateVersions(Map(name -> rcVersion))
+          repositories1 <- service.listRepositories
+          _             <- service.updateVersions(Map(name -> finalVersion))
+          repositories2 <- service.listRepositories
+        } yield {
+          assert(repositories1, equalTo(Map(name -> Some(rcVersion)))) &&
+          assert(repositories2, equalTo(Map(name -> Some(finalVersion))))
         }
       }
     }
