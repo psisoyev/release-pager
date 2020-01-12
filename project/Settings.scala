@@ -6,7 +6,16 @@ import sbt.util.Level
 import wartremover._
 
 object Settings {
-  val warts = Warts.allBut(Wart.Any, Wart.TraversableOps, Wart.StringPlusAny, Wart.Nothing, Wart.Overloading, Wart.JavaSerializable, Wart.PublicInference, Wart.Serializable)
+  val warts = Warts.allBut(
+    Wart.Any,
+    Wart.TraversableOps,
+    Wart.StringPlusAny,
+    Wart.Nothing,
+    Wart.Overloading,
+    Wart.JavaSerializable,
+    Wart.PublicInference,
+    Wart.Serializable,
+    Wart.DefaultArguments)
 
   val commonSettings = {
     Seq(
