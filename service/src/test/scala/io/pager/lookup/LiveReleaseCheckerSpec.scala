@@ -58,18 +58,19 @@ object LiveReleaseCheckerTestCases {
       }
     },
     testM("Notify users about new release") {
-      checkM(repositoryName, chatIds) { case (name, (chatId1, chatId2)) =>
-        val repositories = Map(name -> Some(rcVersion))
-        val subscribers  = Set(chatId1, chatId2)
+      checkM(repositoryName, chatIds) {
+        case (name, (chatId1, chatId2)) =>
+          val repositories = Map(name -> Some(rcVersion))
+          val subscribers  = Set(chatId1, chatId2)
 
-        val gitHubClientMocks   = GitHubClient.releases(equalTo(name)) returns value(releases)
-        val telegramClientMocks = TelegramClient.broadcastMessage(equalTo((subscribers, message(name)))) returns unit
-        val subscriptionMocks =
-          (SubscriptionLogic.listRepositories returns value(repositories)) *>
-            (SubscriptionLogic.updateVersions(equalTo(Map(name -> finalVersion))) returns unit) *>
-            (SubscriptionLogic.listSubscribers(equalTo(name)) returns value(subscribers))
+          val gitHubClientMocks   = GitHubClient.releases(equalTo(name)) returns value(releases)
+          val telegramClientMocks = TelegramClient.broadcastMessage(equalTo((subscribers, message(name)))) returns unit
+          val subscriptionMocks =
+            (SubscriptionLogic.listRepositories returns value(repositories)) *>
+              (SubscriptionLogic.updateVersions(equalTo(Map(name -> finalVersion))) returns unit) *>
+              (SubscriptionLogic.listSubscribers(equalTo(name)) returns value(subscribers))
 
-        scheduleRefreshSpec(subscriptionMocks, telegramClientMocks, gitHubClientMocks)
+          scheduleRefreshSpec(subscriptionMocks, telegramClientMocks, gitHubClientMocks)
       }
     },
     testM("GitHub client error should be handled") {
