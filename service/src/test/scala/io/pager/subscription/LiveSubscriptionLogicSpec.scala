@@ -5,15 +5,15 @@ import io.pager.Generators._
 import io.pager.client.telegram.ChatId
 import io.pager.logging.Logger
 import io.pager.subscription.Repository.{ Name, Version }
-import io.pager.subscription.LiveSubscriptionLogicTestCases._
 import zio._
 import zio.test.Assertion._
 import zio.test._
 import TestData._
+import io.pager.TestCases.TestScenarios
 
-object LiveSubscriptionLogicSpec extends DefaultRunnableSpec(suite(specName)(scenarios: _*))
+object LiveSubscriptionLogicSpec extends DefaultRunnableSpec(LiveSubscriptionLogicTestCases.suite)
 
-object LiveSubscriptionLogicTestCases {
+object LiveSubscriptionLogicTestCases extends TestCases {
   val specName: String = "LiveSubscriptionLogicSpec"
   type RepositoryMap   = UIO[Ref[Map[Name, Option[Version]]]]
   type SubscriptionMap = UIO[Ref[Map[ChatId, Set[Repository.Name]]]]
