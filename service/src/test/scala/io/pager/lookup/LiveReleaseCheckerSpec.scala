@@ -2,12 +2,12 @@ package io.pager.lookup
 
 import io.pager.Generators._
 import io.pager.PagerError.NotFound
+import io.pager.TestCases
+import io.pager.TestCases.TestScenarios
 import io.pager.TestData._
-import io.pager.TestScenarios
 import io.pager.client.github.GitHubClient
 import io.pager.client.telegram.TelegramClient
 import io.pager.logging.Logger
-import io.pager.lookup.LiveReleaseCheckerTestCases._
 import io.pager.subscription.SubscriptionLogic
 import zio._
 import zio.test.Assertion._
@@ -15,9 +15,9 @@ import zio.test.{ DefaultRunnableSpec, _ }
 import zio.test.mock.Expectation._
 import zio.test.mock._
 
-object LiveReleaseCheckerSpec extends DefaultRunnableSpec(suite(specName)(scenarios: _*))
+object LiveReleaseCheckerSpec extends DefaultRunnableSpec(LiveReleaseCheckerTestCases.suite)
 
-object LiveReleaseCheckerTestCases {
+object LiveReleaseCheckerTestCases extends TestCases {
   val specName: String = "LiveReleaseCheckerSpec"
 
   val scenarios: TestScenarios = List(

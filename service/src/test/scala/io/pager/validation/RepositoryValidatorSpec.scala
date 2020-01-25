@@ -2,11 +2,12 @@ package io.pager.validation
 
 import io.pager.PagerError
 import io.pager.PagerError.NotFound
+import io.pager.TestCases.TestScenarios
 import io.pager.client.github.{ GitHubClient, GitHubRelease }
 import io.pager.logging.Logger
 import io.pager.subscription.Repository.Name
-import io.pager.validation.RepositoryValidatorTestCases._
 import io.pager.validation.RepositoryValidator.GitHub
+import io.pager.validation.RepositoryValidatorTestCases._
 import zio._
 import zio.test.Assertion._
 import zio.test._
@@ -37,21 +38,20 @@ object RepositoryValidatorTestCases {
     }
   }
 
-  val scenarios = Seq(
+  val scenarios = List(
     testM("successfully validate existing repository by name") {
-      val repo = "zio/zio"
+      val repo   = "zio/zio"
+      val result = succeedingValidator.validate(repo)
 
-      succeedingValidator
-        .validate(repo)
-        .map(result => assert(result, equalTo(Name("zio/zio"))))
+      assertM(result, equalTo(Name("zio/zio")))
     },
     testM("fail to validate non-existing portfolio") {
       val repo = "ololo"
-
-      failingValidator
+      val result = failingValidator
         .validate(repo)
         .flip
-        .map(result => assert(result, equalTo(notFound)))
+
+      assertM(result, equalTo(notFound))
     }
   )
 }

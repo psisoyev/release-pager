@@ -29,11 +29,13 @@ object LiveSubscriptionLogicTestCases extends TestCases {
       val chatStorage              = ChatStorage.Test.make(subscriptionMap)
       val repositoryVersionStorage = RepositoryVersionStorage.Test.make(repositoryMap)
 
-      SubscriptionLogic.Live.make(
-        logger = Logger.Test,
-        chatStorageService = chatStorage,
-        repositoryVersionStorageService = repositoryVersionStorage
-      )
+      SubscriptionLogic
+        .Live
+        .make(
+          logger = Logger.Test,
+          chatStorageService = chatStorage,
+          repositoryVersionStorageService = repositoryVersionStorage
+        )
     }
 
   val scenarios: TestScenarios = List(
