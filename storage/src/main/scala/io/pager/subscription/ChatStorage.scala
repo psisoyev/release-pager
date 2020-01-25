@@ -12,10 +12,11 @@ object ChatStorage {
   type SubscriptionMap = Map[ChatId, Set[Name]]
 
   trait Service[R] {
-    def listSubscriptions(chatId: ChatId): RIO[R, Set[Name]]
-    def listSubscribers(name: Name): RIO[R, Set[ChatId]]
     def subscribe(chatId: ChatId, name: Name): RIO[R, Unit]
     def unsubscribe(chatId: ChatId, name: Name): RIO[R, Unit]
+
+    def listSubscriptions(chatId: ChatId): RIO[R, Set[Name]]
+    def listSubscribers(name: Name): RIO[R, Set[ChatId]]
   }
 
   trait InMemory extends ChatStorage {
@@ -23,16 +24,6 @@ object ChatStorage {
     type RepositoryUpdate = Set[Name] => Set[Name]
 
     val chatStorage: Service[Any] = new Service[Any] {
-      override def listSubscriptions(chatId: ChatId): UIO[Set[Name]] =
-        subscriptions
-          .get
-          .map(_.getOrElse(chatId, Set.empty))
-
-      override def listSubscribers(name: Name): UIO[Set[ChatId]] =
-        subscriptions
-          .get
-          .map(_.collect { case (chatId, repos) if repos.contains(name) => chatId }.toSet)
-
       override def subscribe(chatId: ChatId, name: Name): UIO[Unit] =
         updateSubscriptions(chatId)(_ + name).unit
 
@@ -44,6 +35,16 @@ object ChatStorage {
           val subscriptions = current.getOrElse(chatId, Set.empty)
           current + (chatId -> f(subscriptions))
         }
+
+      override def listSubscriptions(chatId: ChatId): UIO[Set[Name]] =
+        subscriptions
+          .get
+          .map(_.getOrElse(chatId, Set.empty))
+
+      override def listSubscribers(name: Name): UIO[Set[ChatId]] =
+        subscriptions
+          .get
+          .map(_.collect { case (chatId, repos) if repos.contains(name) => chatId }.toSet)
     }
   }
 
