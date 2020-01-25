@@ -4,13 +4,13 @@ import io.pager.subscription.Repository.{ Name, Version }
 import zio.{ Ref, UIO }
 
 trait RepositoryVersionStorage {
-  val repositoryVersionStorage: RepositoryVersionStorage.Service
+  val repositoryVersionStorage: RepositoryVersionStorage.Service[Any]
 }
 
 object RepositoryVersionStorage {
   type SubscriberMap = Map[Name, Option[Version]]
 
-  trait Service {
+  trait Service[R] {
     def listRepositories: UIO[SubscriberMap]
     def addRepository(name: Name): UIO[Unit]
     def deleteRepository(name: Name): UIO[Unit]
@@ -20,7 +20,7 @@ object RepositoryVersionStorage {
   trait InMemory extends RepositoryVersionStorage {
     def subscribers: Ref[SubscriberMap]
 
-    val repositoryVersionStorage: Service = new Service {
+    val repositoryVersionStorage: Service[Any] = new Service[Any] {
       override def listRepositories: UIO[SubscriberMap] = subscribers.get
 
       override def addRepository(name: Name): UIO[Unit] =
@@ -41,7 +41,7 @@ object RepositoryVersionStorage {
   }
 
   object Test {
-    def make(state: Ref[Map[Name, Option[Version]]]): RepositoryVersionStorage.Service =
+    def make(state: Ref[Map[Name, Option[Version]]]): RepositoryVersionStorage.Service[Any] =
       new InMemory { def subscribers: Ref[SubscriberMap] = state }.repositoryVersionStorage
   }
 }

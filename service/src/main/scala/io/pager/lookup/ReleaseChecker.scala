@@ -6,17 +6,19 @@ import io.pager.client.telegram.TelegramClient
 import io.pager.logging._
 import io.pager.subscription.Repository.{ Name, Version }
 import io.pager.subscription.{ Repository, SubscriptionLogic }
-import zio.{ IO, Task, ZIO }
+import zio.macros.annotation.accessible
+import zio.{ IO, RIO, Task, ZIO }
 
 import scala.util.Try
 
+@accessible(">")
 trait ReleaseChecker {
-  val releaseChecker: ReleaseChecker.Service
+  val releaseChecker: ReleaseChecker.Service[Any]
 }
 
 object ReleaseChecker {
-  trait Service {
-    def scheduleRefresh: Task[Unit]
+  trait Service[R] {
+    def scheduleRefresh: RIO[R, Unit]
   }
 
   trait Live extends ReleaseChecker {
@@ -25,7 +27,7 @@ object ReleaseChecker {
     def telegramClient: TelegramClient.Service[Any]
     def subscriptionLogic: SubscriptionLogic.Service[Any]
 
-    override val releaseChecker: Service = new Service {
+    override val releaseChecker: Service[Any] = new Service[Any] {
 
       override def scheduleRefresh: Task[Unit] =
         for {
@@ -83,7 +85,7 @@ object ReleaseChecker {
       gc: GitHubClient,
       tc: TelegramClient,
       sl: SubscriptionLogic
-    ): ReleaseChecker.Service =
+    ): ReleaseChecker.Service[Any] =
       new ReleaseChecker.Live {
         override def logger: Logger.Service                            = Logger.Test
         override def gitHubClient: GitHubClient.Service[Any]           = gc.gitHubClient
