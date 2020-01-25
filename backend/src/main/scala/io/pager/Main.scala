@@ -77,11 +77,15 @@ object Main extends zio.App {
     http4sClient: Resource[Task, Client[Task]],
     canoeClient: Resource[Task, CanoeClient[Task]]
   ): Task[Int] = {
-    val startTelegramClient = ZIO.accessM[TelegramClient](_.telegramClient.start).fork
+    val startTelegramClient =
+      TelegramClient.>
+        .start
+        .fork
     val scheduleReleaseChecker =
-      ZIO
-        .accessM[ReleaseCheckerEnv](_.releaseChecker.scheduleRefresh)
+      ReleaseChecker.>
+        .scheduleRefresh
         .repeat(Schedule.fixed(Duration(1, TimeUnit.MINUTES)))
+
     val program = startTelegramClient *> scheduleReleaseChecker
 
     canoeClient.use { globalCanoeClient =>
