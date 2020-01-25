@@ -1,7 +1,5 @@
 package io.pager
 
-import java.util.concurrent.TimeUnit
-
 import canoe.api.{ TelegramClient => CanoeClient }
 import cats.effect.Resource
 import io.pager.PagerError.MissingBotToken
@@ -20,7 +18,7 @@ import org.http4s.client.blaze.BlazeClientBuilder
 import zio._
 import zio.clock.Clock
 import zio.console.{ putStrLn, Console }
-import zio.duration.Duration
+import zio.duration._
 import zio.interop.catz._
 import zio.system._
 
@@ -77,16 +75,12 @@ object Main extends zio.App {
     http4sClient: Resource[Task, Client[Task]],
     canoeClient: Resource[Task, CanoeClient[Task]]
   ): Task[Int] = {
-    val startTelegramClient =
-      TelegramClient.>
-        .start
-        .fork
-    val scheduleReleaseChecker =
-      ReleaseChecker.>
-        .scheduleRefresh
-        .repeat(Schedule.fixed(Duration(1, TimeUnit.MINUTES)))
+    val startTelegramClient = TelegramClient.>.start
+    val scheduleRefresh = ReleaseChecker.>.scheduleRefresh
 
-    val program = startTelegramClient *> scheduleReleaseChecker
+    val program =
+      startTelegramClient.fork *>
+        scheduleRefresh.repeat(Schedule.spaced(1.minute))
 
     canoeClient.use { globalCanoeClient =>
       http4sClient.use { http4sClient =>
