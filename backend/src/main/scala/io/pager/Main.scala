@@ -70,6 +70,7 @@ object Main extends zio.App {
         CanoeClient.global[Task](token)
       }
 
+  // format: off
   private def buildProgram(
     subscriberMap: Ref[Map[Name, Option[Version]]],
     subscriptionMap: Ref[Map[ChatId, Set[Name]]],
