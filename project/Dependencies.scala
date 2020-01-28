@@ -25,22 +25,19 @@ object Dependencies {
   val slf4j = "org.slf4j" % "slf4j-simple" % Version.slf4j
 
   val canoe = "org.augustjune" %% "canoe" % Version.canoe
-
-  val scalaTest = "org.scalatest" %% "scalatest" % Version.scalaTest % Test
 }
 
 object Version {
   val zio = "1.0.0-RC17"
   val zioCats = "2.0.0.0-RC10"
-  val zioMacro = "0.6.0"
-  val fs2Core = "2.0.1"
+  val zioMacro = "0.6.2"
   val slf4j = "1.7.28"
+  val fs2Core = "2.2.1"
   val kindProjector = "0.10.3"
-  val canoe = "0.2.0"
-  val http4s = "0.21.0-M5"
+  val canoe = "0.4.0"
+  val http4s = "0.21.0-RC1"
   val circe = "0.12.3"
   val circeExtras = "0.12.2"
-  val scalaTest = "3.0.8"
-  val doobie = "0.8.4"
+  val doobie = "0.8.8"
   val newType = "0.4.3"
 }
