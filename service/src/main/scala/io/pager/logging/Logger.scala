@@ -2,6 +2,7 @@ package io.pager.logging
 
 import io.pager.ThrowableOps._
 import zio.UIO
+import zio.clock._
 import zio.console.{ Console => ConsoleZIO }
 
 trait Logger {
@@ -24,22 +25,28 @@ object Logger {
     def error(t: Throwable)(message: => String): UIO[Unit]
   }
 
-  trait Console extends Logger with ConsoleZIO {
+  trait Console extends Logger with ConsoleZIO with Clock {
     val logger: Logger.Service = new Logger.Service {
-      override def error(message: => String): UIO[Unit] = console.putStrLn(message)
+      def error(message: => String): UIO[Unit] = print(message)
 
-      def warn(message: => String): UIO[Unit] = console.putStrLn(message)
+      def warn(message: => String): UIO[Unit] = print(message)
 
-      def info(message: => String): UIO[Unit] = console.putStrLn(message)
+      def info(message: => String): UIO[Unit] = print(message)
 
-      def debug(message: => String): UIO[Unit] = console.putStrLn(message)
+      def debug(message: => String): UIO[Unit] = print(message)
 
-      def trace(message: => String): UIO[Unit] = console.putStrLn(message)
+      def trace(message: => String): UIO[Unit] = print(message)
 
       def error(t: Throwable)(message: => String): UIO[Unit] =
         for {
+          _ <- print(message)
           _ <- console.putStrLn(t.stackTrace)
-          _ <- console.putStrLn(message)
+        } yield ()
+
+      private def print(message: => String): UIO[Unit] =
+        for {
+          timestamp <- clock.currentDateTime
+          _         <- console.putStrLn(s"[$timestamp] $message")
         } yield ()
     }
   }
