@@ -25,7 +25,6 @@ import zio.system._
 import scala.concurrent.ExecutionContext.Implicits
 
 object Main extends zio.App {
-  type ReleaseCheckerEnv = ReleaseChecker with Clock
 
   override def run(args: List[String]): ZIO[ZEnv, Nothing, Int] = {
     val program = for {
@@ -35,7 +34,7 @@ object Main extends zio.App {
       subscriptionMap <- Ref.make(Map.empty[ChatId, Set[Name]])
 
       http4sClient <- buildHttpClient
-      canoeClient  <- buildTelegramClient(token)
+      canoeClient  <- buildCanoeClient(token)
 
       _ <- buildProgram(subscriberMap, subscriptionMap, http4sClient, canoeClient)
     } yield ()
@@ -61,7 +60,7 @@ object Main extends zio.App {
           .resource
       }
 
-  private def buildTelegramClient(token: String): RIO[ZEnv, Resource[Task, CanoeClient[Task]]] =
+  private def buildCanoeClient(token: String): RIO[ZEnv, Resource[Task, CanoeClient[Task]]] =
     ZIO
       .runtime[ZEnv]
       .map { implicit rts =>
