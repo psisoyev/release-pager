@@ -6,6 +6,10 @@ sealed trait PagerError extends Throwable {
 }
 
 object PagerError {
+  final case class ConfigurationError(text: String) extends PagerError {
+    def message: String = text
+  }
+
   final case object MissingBotToken extends PagerError {
     def message: String = "Bot token is not set as environment variable"
   }

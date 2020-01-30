@@ -17,7 +17,7 @@ object RepositoryValidatorSpec extends DefaultRunnableSpec(suite(specName)(scena
 object RepositoryValidatorTestCases {
   val specName: String = "RepositoryValidatorSpec"
 
-  private def buildValidator(client: GitHubClient.Service[Any]): RepositoryValidator.Service =
+  private def makeValidator(client: GitHubClient.Service[Any]): RepositoryValidator.Service =
     new GitHub {
       override val logger: Logger.Service                  = Logger.Test
       override val gitHubClient: GitHubClient.Service[Any] = client
@@ -25,13 +25,13 @@ object RepositoryValidatorTestCases {
 
   private val notFound = NotFound("ololo")
 
-  private val succeedingValidator = buildValidator {
+  private val succeedingValidator = makeValidator {
     new GitHubClient.Service[Any] {
       override def repositoryExists(name: Name): IO[PagerError, Name]        = IO.succeed(name)
       override def releases(name: Name): IO[PagerError, List[GitHubRelease]] = ???
     }
   }
-  private val failingValidator = buildValidator {
+  private val failingValidator = makeValidator {
     new GitHubClient.Service[Any] {
       override def repositoryExists(name: Name): IO[PagerError, Name]        = IO.fail(notFound)
       override def releases(name: Name): IO[PagerError, List[GitHubRelease]] = ???

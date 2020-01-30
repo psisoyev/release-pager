@@ -33,6 +33,7 @@ object ReleaseChecker {
         for {
           _               <- logger.info("Getting latest repository versions")
           repos           <- subscriptionLogic.listRepositories
+          _               = println("REPOOOZZZZ : " + repos)
           latestVersions  <- latestRepositoryVersions(repos.keySet)
           updatedVersions = newVersions(repos, latestVersions)
           _               <- subscriptionLogic.updateVersions(updatedVersions)

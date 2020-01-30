@@ -1,42 +1,47 @@
 package io.pager
 
 import canoe.api.{ TelegramClient => CanoeClient }
-import cats.effect.Resource
-import io.pager.PagerError.MissingBotToken
+import cats.effect.{ Blocker, Resource }
+import doobie.hikari.HikariTransactor
+import doobie.util.transactor.Transactor
+import io.pager.Config.DBConfig
+import io.pager.PagerError.{ ConfigurationError, MissingBotToken }
 import io.pager.client.github.GitHubClient
 import io.pager.client.http.HttpClient
-import io.pager.client.telegram.{ ChatId, ScenarioLogic, TelegramClient }
+import io.pager.client.telegram.{ ScenarioLogic, TelegramClient }
 import io.pager.logging._
 import io.pager.lookup.ReleaseChecker
-import io.pager.subscription.ChatStorage.SubscriptionMap
-import io.pager.subscription.Repository.{ Name, Version }
-import io.pager.subscription.RepositoryVersionStorage.SubscriberMap
 import io.pager.subscription.{ ChatStorage, RepositoryVersionStorage, SubscriptionLogic }
 import io.pager.validation.RepositoryValidator
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
+import pureconfig.ConfigSource
 import zio._
+import zio.blocking.Blocking
 import zio.clock.Clock
 import zio.console.{ putStrLn, Console }
 import zio.duration._
 import zio.interop.catz._
 import zio.system._
+import pureconfig.generic.auto._
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits
 
 object Main extends zio.App {
 
   override def run(args: List[String]): ZIO[ZEnv, Nothing, Int] = {
     val program = for {
-      token <- telegramBotToken
+      token <- telegramBotToken orElse UIO.succeed("972654063:AAEOiS2tpJkrPNsIMLI7glUUvNCjxpJ_2T8")
 
-      subscriberMap   <- Ref.make(Map.empty[Name, Option[Version]])
-      subscriptionMap <- Ref.make(Map.empty[ChatId, Set[Name]])
+      config <- readConfig
+      _      <- FlywayMigration.migrate(config.releasePager.dbConfig)
 
-      http4sClient <- buildHttpClient
-      canoeClient  <- buildCanoeClient(token)
+      http4sClient <- makeHttpClient
+      canoeClient  <- makeCanoeClient(token)
+      transactor   <- makeTransactor(config.releasePager.dbConfig)
 
-      _ <- buildProgram(subscriberMap, subscriptionMap, http4sClient, canoeClient)
+      _ <- makeProgram(http4sClient, canoeClient, transactor)
     } yield ()
 
     program.foldM(
@@ -51,29 +56,65 @@ object Main extends zio.App {
       token <- ZIO.fromOption(token).asError(MissingBotToken)
     } yield token
 
-  private def buildHttpClient: RIO[ZEnv, Resource[Task, Client[Task]]] =
+  private def makeHttpClient: UIO[TaskManaged[Client[Task]]] =
     ZIO
-      .runtime[ZEnv]
+      .runtime[Any]
       .map { implicit rts =>
         BlazeClientBuilder
           .apply[Task](Implicits.global)
           .resource
+          .toManaged
       }
 
-  private def buildCanoeClient(token: String): RIO[ZEnv, Resource[Task, CanoeClient[Task]]] =
+  private def makeCanoeClient(token: String): UIO[TaskManaged[CanoeClient[Task]]] =
     ZIO
-      .runtime[ZEnv]
+      .runtime[Any]
       .map { implicit rts =>
-        CanoeClient.global[Task](token)
+        CanoeClient
+          .global[Task](token)
+          .toManaged
       }
+
+  private def makeTransactor(config: DBConfig): RIO[Blocking, RManaged[Blocking, HikariTransactor[Task]]] = {
+    def transactor(connectEC: ExecutionContext, transactEC: ExecutionContext): Resource[Task, HikariTransactor[Task]] =
+      HikariTransactor
+        .newHikariTransactor[Task](
+          config.driver,
+          config.url,
+          config.user,
+          config.password,
+          connectEC,
+          Blocker.liftExecutionContext(transactEC)
+        )
+
+    ZIO
+      .runtime[Blocking]
+      .map { implicit rt =>
+        for {
+          transactEC <- executionContext(rt)
+          transactor <- transactor(rt.platform.executor.asEC, transactEC).toManaged
+        } yield transactor
+      }
+  }
+
+  private def executionContext(rt: Runtime[Blocking]): UManaged[ExecutionContext] =
+    rt.environment
+      .blocking
+      .blockingExecutor
+      .map(_.asEC)
+      .toManaged_
+
+  private def readConfig: IO[ConfigurationError, Config] =
+    ZIO
+      .fromEither(ConfigSource.default.load[Config])
+      .mapError(failures => ConfigurationError(failures.prettyPrint()))
 
   // format: off
-  private def buildProgram(
-    subscriberMap: Ref[Map[Name, Option[Version]]],
-    subscriptionMap: Ref[Map[ChatId, Set[Name]]],
-    http4sClient: Resource[Task, Client[Task]],
-    canoeClient: Resource[Task, CanoeClient[Task]]
-  ): Task[Int] = {
+  private def makeProgram(
+    http4sClient: TaskManaged[Client[Task]],
+    canoeClient: TaskManaged[CanoeClient[Task]],
+    transactor: RManaged[Blocking, HikariTransactor[Task]]
+  ): RIO[ZEnv, Int] = {
     val startTelegramClient = TelegramClient.>.start
     val scheduleRefresh = ReleaseChecker.>.scheduleRefresh
 
@@ -83,23 +124,24 @@ object Main extends zio.App {
 
     canoeClient.use { globalCanoeClient =>
       http4sClient.use { http4sClient =>
-        program.provide {
-          new TelegramClient.Canoe
-            with ScenarioLogic.CanoeScenarios
-            with Clock.Live
-            with Logger.Console
-            with Console.Live
-            with SubscriptionLogic.Live
-            with ChatStorage.InMemory
-            with RepositoryVersionStorage.InMemory
-            with RepositoryValidator.GitHub
-            with GitHubClient.Live
-            with HttpClient.Http4s
-            with ReleaseChecker.Live {
-              override def subscribers: Ref[SubscriberMap]         = subscriberMap
-              override def subscriptions: Ref[SubscriptionMap]     = subscriptionMap
-              override def client: Client[Task]                    = http4sClient
+        transactor.use { transactor =>
+          program.provide {
+            new TelegramClient.Canoe
+              with ScenarioLogic.CanoeScenarios
+              with Clock.Live
+              with Logger.Console
+              with Console.Live
+              with SubscriptionLogic.Live
+              with ChatStorage.Doobie
+              with RepositoryVersionStorage.Doobie
+              with RepositoryValidator.GitHub
+              with GitHubClient.Live
+              with HttpClient.Http4s
+              with ReleaseChecker.Live {
+              override def xa: Transactor[Task] = transactor
+              override def client: Client[Task] = http4sClient
               override implicit def canoeClient: CanoeClient[Task] = globalCanoeClient
+            }
           }
         }
       }

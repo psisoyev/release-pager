@@ -16,6 +16,9 @@ object Dependencies {
   val doobieHikari = "org.tpolecat" %% "doobie-hikari" % Version.doobie
   val doobie = List(doobieCore, doobieH2, doobieHikari)
 
+  val flyway = "org.flywaydb" % "flyway-core" % Version.flyway
+  val h2 = "com.h2database" % "h2" % Version.h2
+
   val circeGeneric = "io.circe" %% "circe-generic" % Version.circe
   val circeCore = "io.circe" %% "circe-core" % Version.circe
   val circeParser = "io.circe" %% "circe-parser" % Version.circe
@@ -25,6 +28,8 @@ object Dependencies {
   val slf4j = "org.slf4j" % "slf4j-simple" % Version.slf4j
 
   val canoe = "org.augustjune" %% "canoe" % Version.canoe
+
+  val pureconfig = "com.github.pureconfig" %% "pureconfig" % Version.pureconfig
 }
 
 object Version {
@@ -40,4 +45,7 @@ object Version {
   val circeExtras = "0.12.2"
   val doobie = "0.8.8"
   val newType = "0.4.3"
+  val flyway = "6.2.0"
+  val h2 = "1.4.200"
+  val pureconfig = "0.12.2"
 }

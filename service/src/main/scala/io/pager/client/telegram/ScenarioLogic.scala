@@ -32,10 +32,10 @@ object ScenarioLogic {
     override val scenarios: Service[Scenario] = new Service[Scenario] {
       override def add: Scenario[Task, Unit] =
         for {
-          chat      <- Scenario.start(command("add").chat)
+          chat      <- Scenario.expect(command("add").chat)
           _         <- Scenario.eval(chat.send("Please provide repository in form 'organization/name'"))
           _         <- Scenario.eval(chat.send("Examples: psisoyev/release-pager or zio/zio"))
-          userInput <- Scenario.next(text)
+          userInput <- Scenario.expect(text)
           _         <- Scenario.eval(chat.send(s"Checking repository '$userInput'"))
           _         <- Scenario.eval(subscribe(chat, userInput, validate(userInput)))
         } yield ()
@@ -53,10 +53,10 @@ object ScenarioLogic {
 
       override def del: Scenario[Task, Unit] =
         for {
-          chat      <- Scenario.start(command("del").chat)
+          chat      <- Scenario.expect(command("del").chat)
           _         <- Scenario.eval(chat.send("Please provide repository in form 'organization/name'"))
           _         <- Scenario.eval(chat.send("Examples: psisoyev/release-pager or zio/zio"))
-          userInput <- Scenario.next(text)
+          userInput <- Scenario.expect(text)
           _         <- Scenario.eval(chat.send(s"Checking repository '$userInput'"))
           _ <- Scenario.eval {
                 subscriptionLogic.unsubscribe(ChatId(chat.id), Name(userInput)) *>
@@ -66,7 +66,7 @@ object ScenarioLogic {
 
       override def list: Scenario[Task, Unit] =
         for {
-          chat  <- Scenario.start(command("list").chat)
+          chat  <- Scenario.expect(command("list").chat)
           repos <- Scenario.eval(subscriptionLogic.listSubscriptions(ChatId(chat.id)))
           _ <- {
             val result =
@@ -79,13 +79,13 @@ object ScenarioLogic {
 
       override def help: Scenario[Task, Unit] =
         for {
-          chat <- Scenario.start(command("help").chat)
+          chat <- Scenario.expect(command("help").chat)
           _    <- broadcastHelp(chat)
         } yield ()
 
       override def start: Scenario[Task, Unit] =
         for {
-          chat <- Scenario.start(command("start").chat)
+          chat <- Scenario.expect(command("start").chat)
           _    <- broadcastHelp(chat)
         } yield ()
 

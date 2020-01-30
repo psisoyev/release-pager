@@ -17,6 +17,7 @@ lazy val service = project
 
 lazy val backend = project
   .settings(commonSettings)
+  .settings(libraryDependencies ++= backendDependencies)
   .dependsOn(service)
 
 lazy val `release-pager` = Project("release-pager", file("."))

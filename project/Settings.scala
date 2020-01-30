@@ -39,12 +39,17 @@ object Settings {
       scalafmtOnCompile := true,
       wartremoverErrors in (Compile, compile) ++= warts,
       wartremoverErrors in (Test, compile) ++= warts,
-      testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+      testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+
+      cancelable in Global := true,
+      fork in Global := true // https://github.com/sbt/sbt/issues/2274
     )
   }
 
-  val storageDependencies = List(zio) ++ doobie
-  val serviceDependencies = List(zio, zioCats, zioTest, zioTestSbt, zioMacro, zioMacroTest, fs2Core, canoe, slf4j) ++ circe
+  val storageDependencies = List(zio, zioCats) ++ doobie
+  val serviceDependencies = List(zioCats, zioTest, zioTestSbt, zioMacro, zioMacroTest, fs2Core, canoe, slf4j) ++ circe
+
+  val backendDependencies = List(flyway, pureconfig, h2)
 
   val higherKinds = addCompilerPlugin("org.typelevel" %% "kind-projector" % Version.kindProjector)
 }
