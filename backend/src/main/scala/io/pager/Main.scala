@@ -122,17 +122,16 @@ object Main extends zio.App {
       startTelegramClient.fork *>
         scheduleRefresh.repeat(Schedule.spaced(1.minute))
 
+    val xxx = transactor.flatMap(ChatStorage.doobie.build.provide)
+
     canoeClient.use { globalCanoeClient =>
       http4sClient.use { http4sClient =>
         transactor.use { transactor =>
-          program.provide {
+          val xx: ZIO[ChatStorage.Service, Throwable, Int] = program.provideSome[ChatStorage.Service] { chatStorageImpl =>
             new TelegramClient.Canoe
               with ScenarioLogic.CanoeScenarios
-              with Clock.Live
               with Logger.Console
-              with Console.Live
               with SubscriptionLogic.Live
-              with ChatStorage.Doobie
               with RepositoryVersionStorage.Doobie
               with RepositoryValidator.GitHub
               with GitHubClient.Live
@@ -141,8 +140,11 @@ object Main extends zio.App {
               override def xa: Transactor[Task] = transactor
               override def client: Client[Task] = http4sClient
               override implicit def canoeClient: CanoeClient[Task] = globalCanoeClient
+              override def chatStorage: ChatStorage.Service = chatStorageImpl
             }
           }
+
+          xx.provideLayer(xxx)
         }
       }
     }

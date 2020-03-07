@@ -9,32 +9,31 @@ import org.http4s.client.Client
 import zio._
 import zio.interop.catz._
 
-trait HttpClient {
-  val httpClient: HttpClient.Service
-}
-
 object HttpClient {
+  type HttpClient = Has[Service]
+
   trait Service {
     def get[T](uri: String)(implicit d: Decoder[T]): IO[PagerError, T]
   }
 
-  trait Http4s extends HttpClient {
-    def client: Client[Task]
-
+  final case class Http4s(client: Client[Task]) extends Service {
     implicit def entityDecoder[A](implicit decoder: Decoder[A]): EntityDecoder[Task, A] = jsonOf[Task, A]
     implicit def entityEncoder[A](implicit encoder: Encoder[A]): EntityEncoder[Task, A] = jsonEncoderOf[Task, A]
 
-    override val httpClient: Service = new Service {
-      def get[T](uri: String)(implicit d: Decoder[T]): IO[PagerError, T] = {
-        def call(uri: Uri): IO[PagerError, T] =
-          client
-            .expect[T](uri)
-            .foldM(_ => IO.fail(NotFound(uri.renderString)), ZIO.succeed)
+    def get[T](uri: String)(implicit d: Decoder[T]): IO[PagerError, T] = {
+      def call(uri: Uri): IO[PagerError, T] =
+        client
+          .expect[T](uri)
+          .foldM(_ => IO.fail(NotFound(uri.renderString)), result => ZIO.succeed(result))
 
-        Uri
-          .fromString(uri)
-          .fold(_ => IO.fail(MalformedUrl(uri)), call)
-      }
+      Uri
+        .fromString(uri)
+        .fold(_ => IO.fail(MalformedUrl(uri)), call)
     }
   }
+
+  val http4s: ZLayer[Client[Task], Nothing, Has[Http4s]] =
+    ZLayer.fromFunction { http4sClient: Client[Task] =>
+      Http4s(http4sClient)
+    }
 }

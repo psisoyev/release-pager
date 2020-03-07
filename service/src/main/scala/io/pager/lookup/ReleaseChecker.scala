@@ -6,41 +6,32 @@ import io.pager.client.telegram.TelegramClient
 import io.pager.logging._
 import io.pager.subscription.Repository.{ Name, Version }
 import io.pager.subscription.{ Repository, SubscriptionLogic }
-import zio.macros.annotation.accessible
-import zio.{ IO, RIO, Task, ZIO }
+import zio.{ Has, IO, Task, ZIO, ZLayer }
 
 import scala.util.Try
 
-@accessible(">")
-trait ReleaseChecker {
-  val releaseChecker: ReleaseChecker.Service[Any]
-}
-
 object ReleaseChecker {
-  trait Service[R] {
-    def scheduleRefresh: RIO[R, Unit]
+  trait Service {
+    def scheduleRefresh: Task[Unit]
   }
 
-  trait Live extends ReleaseChecker {
-    def logger: Logger.Service
-    def gitHubClient: GitHubClient.Service[Any]
-    def telegramClient: TelegramClient.Service[Any]
-    def subscriptionLogic: SubscriptionLogic.Service[Any]
-
-    override val releaseChecker: Service[Any] = new Service[Any] {
-
-      override def scheduleRefresh: Task[Unit] =
-        for {
-          _               <- logger.info("Getting latest repository versions")
-          repos           <- subscriptionLogic.listRepositories
-          latestVersions  <- latestRepositoryVersions(repos.keySet)
-          updatedVersions = newVersions(repos, latestVersions)
-          _               <- subscriptionLogic.updateVersions(updatedVersions)
-          statuses        <- repositoryStates(updatedVersions)
-          _               <- broadcastUpdates(statuses)
-          _               <- logger.info("Finished repository refresh")
-        } yield ()
-    }
+  final case class Live(
+    logger: Logger.Service,
+    gitHubClient: GitHubClient.Service,
+    telegramClient: TelegramClient.Service,
+    subscriptionLogic: SubscriptionLogic.Service
+  ) extends Service {
+    override def scheduleRefresh: Task[Unit] =
+      for {
+        _               <- logger.info("Getting latest repository versions")
+        repos           <- subscriptionLogic.listRepositories
+        latestVersions  <- latestRepositoryVersions(repos.keySet)
+        updatedVersions = newVersions(repos, latestVersions)
+        _               <- subscriptionLogic.updateVersions(updatedVersions)
+        statuses        <- repositoryStates(updatedVersions)
+        _               <- broadcastUpdates(statuses)
+        _               <- logger.info("Finished repository refresh")
+      } yield ()
 
     private def repositoryStates(updatedVersions: Map[Name, Version]): Task[List[Repository]] =
       ZIO.foreach(updatedVersions) {
@@ -52,7 +43,7 @@ object ReleaseChecker {
 
     private def latestRepositoryVersions(repos: Set[Name]): IO[PagerError, Map[Name, Option[Version]]] =
       ZIO
-        .traverse(repos) { name =>
+        .foreach(repos) { name =>
           gitHubClient
             .releases(name)
             .map(releases => name -> Try(releases.maxBy(_.published_at).name).toOption)
@@ -79,18 +70,12 @@ object ReleaseChecker {
         .unit
   }
 
-  object Live {
-    def make(
-      logger: Logger.Service,
-      gc: GitHubClient,
-      tc: TelegramClient,
-      sl: SubscriptionLogic
-    ): ReleaseChecker.Service[Any] =
-      new ReleaseChecker.Live {
-        override def logger: Logger.Service                            = Logger.Test
-        override def gitHubClient: GitHubClient.Service[Any]           = gc.gitHubClient
-        override def telegramClient: TelegramClient.Service[Any]       = tc.telegramClient
-        override def subscriptionLogic: SubscriptionLogic.Service[Any] = sl.subscriptionLogic
-      }.releaseChecker
-  }
+  val live
+    : ZLayer[Has[Logger.Service] with Has[GitHubClient.Service] with Has[TelegramClient.Service] with Has[SubscriptionLogic.Service], Nothing, Has[
+      Service
+    ]] =
+    ZLayer.fromServices[Logger.Service, GitHubClient.Service, TelegramClient.Service, SubscriptionLogic.Service, ReleaseChecker.Service] {
+      (logger: Logger.Service, gc: GitHubClient.Service, tc: TelegramClient.Service, sl: SubscriptionLogic.Service) =>
+        ReleaseChecker.Live(logger, gc, tc, sl)
+    }
 }
