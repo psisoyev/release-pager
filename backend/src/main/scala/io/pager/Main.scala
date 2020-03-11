@@ -107,11 +107,11 @@ object Main extends zio.App {
   private def makeProgram(
     http4sClient: TaskManaged[Client[Task]],
     canoeClient: TaskManaged[CanoeClient[Task]],
-    transactor: RManaged[Blocking, HikariTransactor[Task]]
+    transactor: RManaged[Blocking, Transactor[Task]]
   ): RIO[ZEnv, Int] = {
-
     val loggerLayer = Logger.console
     val transactorLayer = transactor.toLayer.orDie
+
     val chatStorageLayer = transactorLayer >>> ChatStorage.doobie
     val repositoryVersionStorageLayer = transactorLayer >>> RepositoryVersionStorage.doobie
     val storageLayer = chatStorageLayer ++ repositoryVersionStorageLayer

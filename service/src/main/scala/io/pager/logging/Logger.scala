@@ -1,8 +1,7 @@
 package io.pager.logging
 
 import io.pager.ThrowableOps._
-import zio.ZLayer.NoDeps
-import zio.{ Has, UIO, ZLayer }
+import zio.{ Has, UIO, ULayer, URLayer, ZLayer }
 import zio.clock._
 import zio.console.{ Console => ConsoleZIO }
 
@@ -47,7 +46,7 @@ object Logger {
       } yield ()
   }
 
-  val console: ZLayer[Clock with ConsoleZIO, Nothing, Has[Service]] =
+  val console: URLayer[Clock with ConsoleZIO, Has[Service]] =
     ZLayer.fromServices[Clock.Service, ConsoleZIO.Service, Service] { (clock, console) =>
       new Console(clock, console)
     }
@@ -61,5 +60,5 @@ object Logger {
     def error(t: Throwable)(message: => String): UIO[Unit] = UIO.unit
   }
 
-  val silent: NoDeps[Nothing, Has[Silent]] = ZLayer.succeed(new Silent)
+  val silent: ULayer[Has[Silent]] = ZLayer.succeed(new Silent)
 }
