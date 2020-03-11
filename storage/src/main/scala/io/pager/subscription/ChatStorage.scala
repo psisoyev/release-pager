@@ -86,8 +86,8 @@ object ChatStorage {
         .orDie
   }
 
-  val doobie: ZLayer[Transactor[Task], Nothing, Has[Service]] =
-    ZLayer.fromFunction { xa: Transactor[Task] =>
+  val doobie: ZLayer[Has[Transactor[Task]], Nothing, Has[Service]] =
+    ZLayer.fromService[Transactor[Task], Service] { xa: Transactor[Task] =>
       Doobie(xa)
     }
 

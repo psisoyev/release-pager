@@ -16,7 +16,9 @@ object TelegramClient {
     def broadcastMessage(subscribers: Set[ChatId], message: String): Task[Unit]
   }
 
-  class Canoe(logger: Logger.Service, scenarios: ScenarioLogic.Service[Scenario])(implicit canoeClient: Client[Task]) extends Service {
+  class Canoe(logger: Logger.Service, scenarios: CanoeScenarios.Service, canoeClient: Client[Task]) extends Service {
+    implicit val canoe: Client[Task] = canoeClient
+
     def broadcastMessage(subscribers: Set[ChatId], message: String): Task[Unit] =
       ZIO
         .foreach(subscribers) { chatId =>
@@ -40,10 +42,10 @@ object TelegramClient {
           .drain
   }
 
-  def canoe: ZLayer[Has[Logger.Service] with Has[ScenarioLogic.Service[Scenario]], Nothing, Has[Canoe]] =
-    ZLayer.fromServices[Logger.Service, ScenarioLogic.Service[Scenario], Canoe] {
-      (logger: Logger.Service, scenarios: ScenarioLogic.Service[Scenario]) =>
-        implicit val client: Client[Task] = ???
-        new Canoe(logger, scenarios)
+  val canoe: ZLayer[Has[Client[Task]] with Has[Logger.Service] with Has[CanoeScenarios.Service], Nothing, Has[Service]] =
+    ZLayer.fromServices[Client[Task], Logger.Service, CanoeScenarios.Service, Service] { (client, logger, scenarios) =>
+      new Canoe(logger, scenarios, client)
     }
+
+  def start: ZIO[TelegramClient, Throwable, Unit] = ZIO.accessM(_.get.start)
 }

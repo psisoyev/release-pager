@@ -19,7 +19,7 @@ object SubscriptionLogic {
     def updateVersions(updatedVersions: Map[Name, Version]): Task[Unit]
   }
 
-  case class Live(
+  final case class Live(
     logger: Logger.Service,
     chatStorage: ChatStorage.Service,
     repositoryVersionStorage: RepositoryVersionStorage.Service
@@ -55,8 +55,10 @@ object SubscriptionLogic {
         .unit
   }
 
-  val live: ZLayer[Any, Nothing, Has[Live]] =
-    ZLayer.fromFunction { (logger: Logger.Service, chatStorage: ChatStorage.Service, repositoryVersionStorage: RepositoryVersionStorage.Service) =>
-      Live(logger, chatStorage, repositoryVersionStorage)
+  type LiveDeps = Has[Logger.Service] with Has[ChatStorage.Service] with Has[RepositoryVersionStorage.Service]
+  val live: ZLayer[LiveDeps, Nothing, Has[Service]] =
+    ZLayer.fromServices[Logger.Service, ChatStorage.Service, RepositoryVersionStorage.Service, Service] {
+      (logger: Logger.Service, chatStorage: ChatStorage.Service, repositoryVersionStorage: RepositoryVersionStorage.Service) =>
+        Live(logger, chatStorage, repositoryVersionStorage)
     }
 }

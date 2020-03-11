@@ -6,7 +6,8 @@ import io.pager.PagerError.{ MalformedUrl, NotFound }
 import org.http4s._
 import org.http4s.circe._
 import org.http4s.client.Client
-import zio._
+import zio.ZLayer.NoDeps
+import zio.{ Task, _ }
 import zio.interop.catz._
 
 object HttpClient {
@@ -32,8 +33,8 @@ object HttpClient {
     }
   }
 
-  val http4s: ZLayer[Client[Task], Nothing, Has[Http4s]] =
-    ZLayer.fromFunction { http4sClient: Client[Task] =>
+  val http4s: ZLayer[Has[Client[Task]], Nothing, Has[Service]] =
+    ZLayer.fromService[Client[Task], Service] { http4sClient: Client[Task] =>
       Http4s(http4sClient)
     }
 }

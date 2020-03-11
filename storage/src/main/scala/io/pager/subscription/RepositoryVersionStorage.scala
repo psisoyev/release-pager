@@ -3,8 +3,10 @@ package io.pager.subscription
 import doobie.implicits._
 import doobie.util.transactor.Transactor
 import doobie.{ Query0, Update0 }
+import io.pager.subscription.ChatStorage.{ Doobie, Service }
 import io.pager.subscription.Repository.{ Name, Version }
 import io.pager.subscription.RepositoryVersionStorage.Doobie.SQL
+import zio.ZLayer.NoDeps
 import zio._
 import zio.interop.catz._
 
@@ -79,8 +81,8 @@ object RepositoryVersionStorage {
         .map(_.toMap)
   }
 
-  val doobie: ZLayer[Transactor[Task], Nothing, Has[Doobie]] =
-    ZLayer.fromFunction { xa: Transactor[Task] =>
+  val doobie: ZLayer[Has[Transactor[Task]], Nothing, Has[Service]] =
+    ZLayer.fromService[Transactor[Task], Service] { xa: Transactor[Task] =>
       Doobie(xa)
     }
 

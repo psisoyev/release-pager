@@ -6,11 +6,13 @@ import io.pager.client.telegram.TelegramClient
 import io.pager.logging._
 import io.pager.subscription.Repository.{ Name, Version }
 import io.pager.subscription.{ Repository, SubscriptionLogic }
-import zio.{ Has, IO, Task, ZIO, ZLayer }
+import zio._
 
 import scala.util.Try
 
 object ReleaseChecker {
+  type ReleaseChecker = Has[Service]
+
   trait Service {
     def scheduleRefresh: Task[Unit]
   }
@@ -32,6 +34,8 @@ object ReleaseChecker {
         _               <- broadcastUpdates(statuses)
         _               <- logger.info("Finished repository refresh")
       } yield ()
+
+//      result.foldM(e => logger.error(e)(s"Couldn't schedule refresh ${e.getMessage}"), _ => ZIO.unit)
 
     private def repositoryStates(updatedVersions: Map[Name, Version]): Task[List[Repository]] =
       ZIO.foreach(updatedVersions) {
@@ -70,12 +74,12 @@ object ReleaseChecker {
         .unit
   }
 
-  val live
-    : ZLayer[Has[Logger.Service] with Has[GitHubClient.Service] with Has[TelegramClient.Service] with Has[SubscriptionLogic.Service], Nothing, Has[
-      Service
-    ]] =
+  private type LiveDeps = Has[Logger.Service] with Has[GitHubClient.Service] with Has[TelegramClient.Service] with Has[SubscriptionLogic.Service]
+  def live: ZLayer[LiveDeps, Nothing, Has[Service]] =
     ZLayer.fromServices[Logger.Service, GitHubClient.Service, TelegramClient.Service, SubscriptionLogic.Service, ReleaseChecker.Service] {
       (logger: Logger.Service, gc: GitHubClient.Service, tc: TelegramClient.Service, sl: SubscriptionLogic.Service) =>
         ReleaseChecker.Live(logger, gc, tc, sl)
     }
+
+  def scheduleRefresh: ZIO[ReleaseChecker, Throwable, Unit] = ZIO.accessM(_.get.scheduleRefresh)
 }

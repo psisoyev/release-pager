@@ -10,10 +10,10 @@ import io.pager.subscription.SubscriptionLogic
 import io.pager.validation.RepositoryValidator
 import zio._
 
-object ScenarioLogic {
-  type ScenarioLogic = Has[Service[Any]]
+object CanoeScenarios {
+  type CanoeScenarios = Has[Service]
 
-  trait Service[Scenario[F[_], _]] {
+  trait Service {
     def start: Scenario[Task, Unit]
     def help: Scenario[Task, Unit]
 
@@ -22,11 +22,13 @@ object ScenarioLogic {
     def list: Scenario[Task, Unit]
   }
 
-  class CanoeScenarios(
+  class Live(
     repositoryValidator: RepositoryValidator.Service,
-    subscriptionLogic: SubscriptionLogic.Service
-  )(implicit canoeClient: Client[Task])
-      extends Service[Scenario] {
+    subscriptionLogic: SubscriptionLogic.Service,
+    canoeClient: Client[Task]
+  ) extends Service {
+    implicit val client: Client[Task] = canoeClient
+
     override def add: Scenario[Task, Unit] =
       for {
         chat      <- Scenario.expect(command("add").chat)
@@ -99,11 +101,9 @@ object ScenarioLogic {
     }
   }
 
-  val canoeScenarios: ZLayer[Any, Nothing, Has[CanoeScenarios]] = {
-    ZLayer.fromFunction {
-      case (repositoryValidator: RepositoryValidator.Service, subscriptionLogic: SubscriptionLogic.Service) =>
-        implicit val client: Client[Task] = ???
-        new CanoeScenarios(repositoryValidator, subscriptionLogic)
+  val live: ZLayer[Has[Client[Task]] with Has[RepositoryValidator.Service] with Has[SubscriptionLogic.Service], Nothing, Has[Service]] =
+    ZLayer.fromServices[Client[Task], RepositoryValidator.Service, SubscriptionLogic.Service, Service] {
+      (client, repositoryValidator, subscriptionLogic) =>
+        new Live(repositoryValidator, subscriptionLogic, client)
     }
-  }
 }

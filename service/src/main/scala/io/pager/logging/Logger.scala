@@ -47,9 +47,9 @@ object Logger {
       } yield ()
   }
 
-  val console: ZLayer[Has[Clock] with Has[ConsoleZIO], Nothing, Has[Console]] =
-    ZLayer.fromServices[Clock, ConsoleZIO, Console] { (clock: Clock, console: ConsoleZIO) =>
-      new Console(clock.get, console.get)
+  val console: ZLayer[Clock with ConsoleZIO, Nothing, Has[Service]] =
+    ZLayer.fromServices[Clock.Service, ConsoleZIO.Service, Service] { (clock, console) =>
+      new Console(clock, console)
     }
 
   class Silent extends Service {

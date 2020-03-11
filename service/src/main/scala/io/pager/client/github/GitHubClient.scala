@@ -37,8 +37,9 @@ object GitHubClient {
     }
   }
 
-  val live: ZLayer[Any, Nothing, Has[Live]] = ZLayer.fromFunction {
-    case (logger: Logger.Service, httpClient: HttpClient.Service) =>
+  type LiveDeps = Has[Logger.Service] with Has[HttpClient.Service]
+  val live: ZLayer[LiveDeps, Nothing, Has[Service]] = ZLayer.fromServices[Logger.Service, HttpClient.Service, Service] {
+    (logger: Logger.Service, httpClient: HttpClient.Service) =>
       Live(logger, httpClient)
   }
 }

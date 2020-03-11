@@ -8,9 +8,11 @@ import io.pager.Config.DBConfig
 import io.pager.PagerError.{ ConfigurationError, MissingBotToken }
 import io.pager.client.github.GitHubClient
 import io.pager.client.http.HttpClient
-import io.pager.client.telegram.{ ScenarioLogic, TelegramClient }
+import io.pager.client.telegram.TelegramClient.TelegramClient
+import io.pager.client.telegram.{ CanoeScenarios, TelegramClient }
 import io.pager.logging._
 import io.pager.lookup.ReleaseChecker
+import io.pager.lookup.ReleaseChecker.ReleaseChecker
 import io.pager.subscription.{ ChatStorage, RepositoryVersionStorage, SubscriptionLogic }
 import io.pager.validation.RepositoryValidator
 import org.http4s.client.Client
@@ -18,12 +20,12 @@ import org.http4s.client.blaze.BlazeClientBuilder
 import pureconfig.ConfigSource
 import zio._
 import zio.blocking.Blocking
-import zio.clock.Clock
 import zio.console.{ putStrLn, Console }
 import zio.duration._
 import zio.interop.catz._
 import zio.system._
 import pureconfig.generic.auto._
+import zio.clock.Clock
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits
@@ -53,7 +55,7 @@ object Main extends zio.App {
   private def telegramBotToken: RIO[System, String] =
     for {
       token <- system.env("BOT_TOKEN")
-      token <- ZIO.fromOption(token).asError(MissingBotToken)
+      token <- ZIO.fromOption(token).mapError(_ => MissingBotToken)
     } yield token
 
   private def makeHttpClient: UIO[TaskManaged[Client[Task]]] =
@@ -77,32 +79,24 @@ object Main extends zio.App {
 
   private def makeTransactor(config: DBConfig): RIO[Blocking, RManaged[Blocking, HikariTransactor[Task]]] = {
     def transactor(connectEC: ExecutionContext, transactEC: ExecutionContext): Resource[Task, HikariTransactor[Task]] =
-      HikariTransactor
-        .newHikariTransactor[Task](
-          config.driver,
-          config.url,
-          config.user,
-          config.password,
-          connectEC,
-          Blocker.liftExecutionContext(transactEC)
-        )
+      HikariTransactor.newHikariTransactor[Task](
+        config.driver,
+        config.url,
+        config.user,
+        config.password,
+        connectEC,
+        Blocker.liftExecutionContext(transactEC)
+      )
 
     ZIO
       .runtime[Blocking]
       .map { implicit rt =>
         for {
-          transactEC <- executionContext(rt)
+          transactEC <- ZIO.access[Blocking](_.get.blockingExecutor.asEC).toManaged_
           transactor <- transactor(rt.platform.executor.asEC, transactEC).toManaged
         } yield transactor
       }
   }
-
-  private def executionContext(rt: Runtime[Blocking]): UManaged[ExecutionContext] =
-    rt.environment
-      .blocking
-      .blockingExecutor
-      .map(_.asEC)
-      .toManaged_
 
   private def readConfig: IO[ConfigurationError, Config] =
     ZIO
@@ -115,38 +109,31 @@ object Main extends zio.App {
     canoeClient: TaskManaged[CanoeClient[Task]],
     transactor: RManaged[Blocking, HikariTransactor[Task]]
   ): RIO[ZEnv, Int] = {
-    val startTelegramClient = TelegramClient.>.start
-    val scheduleRefresh = ReleaseChecker.>.scheduleRefresh
 
-    val program =
-      startTelegramClient.fork *>
-        scheduleRefresh.repeat(Schedule.spaced(1.minute))
+    val loggerLayer = Logger.console
+    val transactorLayer = transactor.toLayer.orDie
+    val chatStorageLayer = transactorLayer >>> ChatStorage.doobie
+    val repositoryVersionStorageLayer = transactorLayer >>> RepositoryVersionStorage.doobie
+    val storageLayer = chatStorageLayer ++ repositoryVersionStorageLayer
+    val subscriptionLogicLayer = (loggerLayer ++ storageLayer) >>> SubscriptionLogic.live
 
-    val xxx = transactor.flatMap(ChatStorage.doobie.build.provide)
+    val http4sClientLayer = http4sClient.toLayer.orDie
+    val httpClientLayer = http4sClientLayer >>> HttpClient.http4s
+    val gitHubClientLayer = (loggerLayer ++ httpClientLayer) >>> GitHubClient.live
+    val repositoryValidatorLayer = (loggerLayer ++ gitHubClientLayer) >>> RepositoryValidator.live
 
-    canoeClient.use { globalCanoeClient =>
-      http4sClient.use { http4sClient =>
-        transactor.use { transactor =>
-          val xx: ZIO[ChatStorage.Service, Throwable, Int] = program.provideSome[ChatStorage.Service] { chatStorageImpl =>
-            new TelegramClient.Canoe
-              with ScenarioLogic.CanoeScenarios
-              with Logger.Console
-              with SubscriptionLogic.Live
-              with RepositoryVersionStorage.Doobie
-              with RepositoryValidator.GitHub
-              with GitHubClient.Live
-              with HttpClient.Http4s
-              with ReleaseChecker.Live {
-              override def xa: Transactor[Task] = transactor
-              override def client: Client[Task] = http4sClient
-              override implicit def canoeClient: CanoeClient[Task] = globalCanoeClient
-              override def chatStorage: ChatStorage.Service = chatStorageImpl
-            }
-          }
+    val canoeClientLayer = canoeClient.toLayer.orDie
 
-          xx.provideLayer(xxx)
-        }
-      }
-    }
+    val canoeScenarioLayer = (canoeClientLayer ++ repositoryValidatorLayer ++ subscriptionLogicLayer) >>> CanoeScenarios.live // TODO if you swap - it doesnt compile
+    val telegramClientLayer = (loggerLayer ++ canoeScenarioLayer ++ canoeClientLayer) >>> TelegramClient.canoe
+    val releaseCheckerLayer = (loggerLayer ++ gitHubClientLayer ++ telegramClientLayer ++ subscriptionLogicLayer) >>> ReleaseChecker.live
+
+    val startTelegramClient = TelegramClient.start
+    val scheduleRefresh = ReleaseChecker.scheduleRefresh.repeat(Schedule.spaced(1.minute))
+
+    val programLayer = releaseCheckerLayer ++ telegramClientLayer
+    val program = startTelegramClient.fork *> scheduleRefresh
+
+    program.provideSomeLayer[ZEnv](programLayer)
   }
 }

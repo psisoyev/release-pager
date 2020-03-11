@@ -6,8 +6,8 @@ object ZLayerTest extends zio.App {
   override def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] = {
 
 //    val env: ZLayer[Has[BookStorage.Service] with Any, RuntimeException, Has[BookLibrary.Service] with Nothing] = BookLibrary.live ++ BookStorage.live
-//    val env2: ZLayer[Has[BookStorage.Service], RuntimeException, Nothing] = BookLibrary.live >>> BookStorage.live
-    val env3: NoDeps[Nothing, Has[BookLibrary.Service]] = BookStorage.live >>> BookLibrary.live
+    val env4: ZLayer[Has[BookStorage.Service], RuntimeException, Has[BookLibrary.Service]] = BookStorage.live >>> BookLibrary.live
+    val env3: NoDeps[Nothing, Has[BookLibrary.Service]]                                    = BookStorage.live >>> BookLibrary.live
     BookLibrary
       .findBook(1)
       .as(0)

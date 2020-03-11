@@ -13,7 +13,7 @@ object RepositoryValidator {
     def validate(text: String): IO[PagerError, Name]
   }
 
-  case class GitHub(logger: Logger.Service, gitHubClient: GitHubClient.Service) extends Service {
+  final case class GitHub(logger: Logger.Service, gitHubClient: GitHubClient.Service) extends Service {
     def validate(name: String): IO[PagerError, Name] =
       gitHubClient
         .repositoryExists(Name(name))
@@ -23,8 +23,9 @@ object RepositoryValidator {
         )
   }
 
-  val gitHub: ZLayer[Any, Nothing, Has[GitHub]] =
-    ZLayer.fromFunction { (logger: Logger.Service, gitHubClient: GitHubClient.Service) =>
+  private type LiveDeps = Has[Logger.Service] with Has[GitHubClient.Service]
+  val live: ZLayer[LiveDeps, Nothing, Has[Service]] =
+    ZLayer.fromServices[Logger.Service, GitHubClient.Service, Service] { (logger: Logger.Service, gitHubClient: GitHubClient.Service) =>
       GitHub(logger, gitHubClient)
     }
 }
