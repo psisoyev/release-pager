@@ -47,5 +47,10 @@ object TelegramClient {
       new Canoe(logger, scenarios, client)
     }
 
+  val empty: ULayer[Has[Service]] = ZLayer.succeed(new Service {
+    override def start: Task[Unit]                                                       = ???
+    override def broadcastMessage(subscribers: Set[ChatId], message: String): Task[Unit] = ???
+  })
+
   def start: ZIO[TelegramClient, Throwable, Unit] = ZIO.accessM(_.get.start)
 }

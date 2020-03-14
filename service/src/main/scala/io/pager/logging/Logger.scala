@@ -41,7 +41,7 @@ object Logger {
 
     private def print(message: => String): UIO[Unit] =
       for {
-        timestamp <- clock.currentDateTime
+        timestamp <- clock.currentDateTime.orDie // TODO orDie
         _         <- console.putStrLn(s"[$timestamp] $message")
       } yield ()
   }
@@ -60,5 +60,5 @@ object Logger {
     def error(t: Throwable)(message: => String): UIO[Unit] = UIO.unit
   }
 
-  val silent: ULayer[Has[Silent]] = ZLayer.succeed(new Silent)
+  val silent: ULayer[Logger] = ZLayer.succeed(new Silent)
 }

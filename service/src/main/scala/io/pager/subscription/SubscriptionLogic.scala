@@ -3,7 +3,7 @@ package io.pager.subscription
 import io.pager.client.telegram.ChatId
 import io.pager.logging.Logger
 import io.pager.subscription.Repository.{ Name, Version }
-import zio.{ Has, Task, ZIO, ZLayer }
+import zio.{ Has, RIO, Task, ZIO, ZLayer }
 
 object SubscriptionLogic {
   type SubscriptionLogic = Has[Service]
@@ -61,4 +61,14 @@ object SubscriptionLogic {
       (logger: Logger.Service, chatStorage: ChatStorage.Service, repositoryVersionStorage: RepositoryVersionStorage.Service) =>
         Live(logger, chatStorage, repositoryVersionStorage)
     }
+
+  def subscribe(chatId: ChatId, name: Name): RIO[SubscriptionLogic, Unit]   = ZIO.accessM[SubscriptionLogic](_.get.subscribe(chatId, name))
+  def unsubscribe(chatId: ChatId, name: Name): RIO[SubscriptionLogic, Unit] = ZIO.accessM[SubscriptionLogic](_.get.unsubscribe(chatId, name))
+
+  def listSubscriptions(chatId: ChatId): RIO[SubscriptionLogic, Set[Name]] = ZIO.accessM[SubscriptionLogic](_.get.listSubscriptions(chatId))
+  def listRepositories: RIO[SubscriptionLogic, Map[Name, Option[Version]]] = ZIO.accessM[SubscriptionLogic](_.get.listRepositories)
+  def listSubscribers(name: Name): RIO[SubscriptionLogic, Set[ChatId]]     = ZIO.accessM[SubscriptionLogic](_.get.listSubscribers(name))
+
+  def updateVersions(updatedVersions: Map[Name, Version]): RIO[SubscriptionLogic, Unit] =
+    ZIO.accessM[SubscriptionLogic](_.get.updateVersions(updatedVersions))
 }

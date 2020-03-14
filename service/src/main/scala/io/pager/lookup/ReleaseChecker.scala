@@ -2,9 +2,13 @@ package io.pager.lookup
 
 import io.pager.PagerError
 import io.pager.client.github.GitHubClient
+import io.pager.client.github.GitHubClient.GitHubClient
 import io.pager.client.telegram.TelegramClient
+import io.pager.client.telegram.TelegramClient.TelegramClient
+import io.pager.logging.Logger.Logger
 import io.pager.logging._
 import io.pager.subscription.Repository.{ Name, Version }
+import io.pager.subscription.SubscriptionLogic.SubscriptionLogic
 import io.pager.subscription.{ Repository, SubscriptionLogic }
 import zio._
 
@@ -74,11 +78,11 @@ object ReleaseChecker {
         .unit
   }
 
-  private type LiveDeps = Has[Logger.Service] with Has[GitHubClient.Service] with Has[TelegramClient.Service] with Has[SubscriptionLogic.Service]
+  type LiveDeps = Logger with GitHubClient with TelegramClient with SubscriptionLogic
   def live: ZLayer[LiveDeps, Nothing, Has[Service]] =
     ZLayer.fromServices[Logger.Service, GitHubClient.Service, TelegramClient.Service, SubscriptionLogic.Service, ReleaseChecker.Service] {
-      (logger: Logger.Service, gc: GitHubClient.Service, tc: TelegramClient.Service, sl: SubscriptionLogic.Service) =>
-        ReleaseChecker.Live(logger, gc, tc, sl)
+      (logger, githubClient, telegramClient, subscriptionLogic) =>
+        ReleaseChecker.Live(logger, githubClient, telegramClient, subscriptionLogic)
     }
 
   def scheduleRefresh: ZIO[ReleaseChecker, Throwable, Unit] = ZIO.accessM(_.get.scheduleRefresh)

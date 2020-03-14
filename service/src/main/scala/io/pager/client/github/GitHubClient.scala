@@ -8,7 +8,7 @@ import io.pager.PagerError.NotFound
 import io.pager.client.http.HttpClient
 import io.pager.logging.Logger
 import io.pager.subscription.Repository.{ Name, Version }
-import zio.{ Has, IO, ZIO, ZLayer }
+import zio.{ Has, IO, Layer, ULayer, ZIO, ZLayer }
 
 object GitHubClient {
   type GitHubClient = Has[Service]
@@ -37,9 +37,15 @@ object GitHubClient {
     }
   }
 
+  // TODO group instances
   type LiveDeps = Has[Logger.Service] with Has[HttpClient.Service]
   val live: ZLayer[LiveDeps, Nothing, Has[Service]] = ZLayer.fromServices[Logger.Service, HttpClient.Service, Service] {
     (logger: Logger.Service, httpClient: HttpClient.Service) =>
       Live(logger, httpClient)
   }
+
+  val empty: ULayer[Has[Service]] = ZLayer.succeed(new Service {
+    override def repositoryExists(name: Name): IO[PagerError, Name]        = ???
+    override def releases(name: Name): IO[PagerError, List[GitHubRelease]] = ???
+  })
 }

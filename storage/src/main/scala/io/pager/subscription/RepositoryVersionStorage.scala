@@ -42,9 +42,9 @@ object RepositoryVersionStorage {
         .unit
   }
 
-  val inMemory: ZLayer[Ref[RepositoryVersionMap], Nothing, Has[InMemory]] =
-    ZLayer.fromFunction { versions: Ref[RepositoryVersionMap] =>
-      InMemory(versions)
+  val inMemory: ZLayer[Has[Ref[RepositoryVersionMap]], Nothing, Has[Service]] =
+    ZLayer.fromService[Ref[RepositoryVersionMap], Service] { subscriptions =>
+      InMemory(subscriptions)
     }
 
   final case class Doobie(xa: Transactor[Task]) extends Service {

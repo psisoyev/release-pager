@@ -30,7 +30,7 @@ object Dependencies {
 }
 
 object Version {
-  val zio = "1.0.0-RC18-1+50-b12edc88-SNAPSHOT"
+  val zio = "1.0.0-RC18-2"
   val zioCats = "2.0.0.0-RC11"
   val zioMacro = "0.6.2"
   val slf4j = "1.7.28"

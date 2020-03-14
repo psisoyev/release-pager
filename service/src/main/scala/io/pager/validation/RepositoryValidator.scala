@@ -4,7 +4,7 @@ import io.pager.PagerError
 import io.pager.client.github.GitHubClient
 import io.pager.logging.Logger
 import io.pager.subscription.Repository.Name
-import zio.{ Has, IO, ZLayer }
+import zio.{ Has, IO, ZIO, ZLayer }
 
 object RepositoryValidator {
   type RepositoryValidator = Has[Service]
@@ -28,4 +28,7 @@ object RepositoryValidator {
     ZLayer.fromServices[Logger.Service, GitHubClient.Service, Service] { (logger: Logger.Service, gitHubClient: GitHubClient.Service) =>
       GitHub(logger, gitHubClient)
     }
+
+  def validate(text: String): ZIO[RepositoryValidator, PagerError, Name] =
+    ZIO.accessM[RepositoryValidator](_.get.validate(text))
 }

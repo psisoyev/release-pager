@@ -47,8 +47,8 @@ object ChatStorage {
         .map(_.collect { case (chatId, repos) if repos.contains(name) => chatId }.toSet)
   }
 
-  val inMemory: ZLayer[Ref[SubscriptionMap], Nothing, Has[Service]] =
-    ZLayer.fromFunction { subscriptions: Ref[SubscriptionMap] =>
+  val inMemory: ZLayer[Has[Ref[SubscriptionMap]], Nothing, Has[Service]] =
+    ZLayer.fromService[Ref[SubscriptionMap], Service] { subscriptions =>
       InMemory(subscriptions)
     }
 
