@@ -7,47 +7,50 @@ import canoe.models.outgoing.TextContent
 import io.pager.logging.Logger
 import zio._
 import zio.interop.catz._
-import zio.macros.annotation.{ accessible, mockable }
-
-@mockable
-@accessible(">")
-trait TelegramClient {
-  val telegramClient: TelegramClient.Service[Any]
-}
 
 object TelegramClient {
-  trait Service[R] {
-    def start: RIO[R, Unit]
-    def broadcastMessage(subscribers: Set[ChatId], message: String): RIO[R, Unit]
+  type TelegramClient = Has[Service]
+
+  trait Service {
+    def start: Task[Unit]
+    def broadcastMessage(subscribers: Set[ChatId], message: String): Task[Unit]
   }
 
-  trait Canoe extends TelegramClient {
-    implicit def canoeClient: Client[Task]
-    def logger: Logger.Service
-    def scenarios: ScenarioLogic.Service[Scenario]
+  class Canoe(logger: Logger.Service, scenarios: CanoeScenarios.Service, canoeClient: Client[Task]) extends Service {
+    implicit val canoe: Client[Task] = canoeClient
 
-    override val telegramClient: Service[Any] = new Service[Any] {
-      def broadcastMessage(subscribers: Set[ChatId], message: String): Task[Unit] =
-        ZIO
-          .traverse(subscribers) { chatId =>
-            val api = new ChatApi(PrivateChat(chatId.value, None, None, None))
-            api.send(TextContent(message))
-          }
-          .unit
+    def broadcastMessage(subscribers: Set[ChatId], message: String): Task[Unit] =
+      ZIO
+        .foreach(subscribers) { chatId =>
+          val api = new ChatApi(PrivateChat(chatId.value, None, None, None))
+          api.send(TextContent(message))
+        }
+        .unit
 
-      override def start: Task[Unit] =
-        logger.info("Starting Telegram polling") *>
-          Bot
-            .polling[Task]
-            .follow(
-              scenarios.start,
-              scenarios.help,
-              scenarios.add,
-              scenarios.del,
-              scenarios.list
-            )
-            .compile
-            .drain
+    override def start: Task[Unit] =
+      logger.info("Starting Telegram polling") *>
+        Bot
+          .polling[Task]
+          .follow(
+            scenarios.start,
+            scenarios.help,
+            scenarios.add,
+            scenarios.del,
+            scenarios.list
+          )
+          .compile
+          .drain
+  }
+
+  val canoe: ZLayer[Has[Client[Task]] with Has[Logger.Service] with Has[CanoeScenarios.Service], Nothing, Has[Service]] =
+    ZLayer.fromServices[Client[Task], Logger.Service, CanoeScenarios.Service, Service] { (client, logger, scenarios) =>
+      new Canoe(logger, scenarios, client)
     }
-  }
+
+  val empty: ULayer[Has[Service]] = ZLayer.succeed(new Service {
+    override def start: Task[Unit]                                                       = ???
+    override def broadcastMessage(subscribers: Set[ChatId], message: String): Task[Unit] = ???
+  })
+
+  def start: ZIO[TelegramClient, Throwable, Unit] = ZIO.accessM(_.get.start)
 }

@@ -42,12 +42,13 @@ object Settings {
       testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
 
       cancelable in Global := true,
-      fork in Global := true // https://github.com/sbt/sbt/issues/2274
+      fork in Global := true, // https://github.com/sbt/sbt/issues/2274
+      resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
     )
   }
 
   val storageDependencies = List(zio, zioCats) ++ doobie
-  val serviceDependencies = List(zioCats, zioTest, zioTestSbt, zioMacro, zioMacroTest, fs2Core, canoe, slf4j) ++ circe
+  val serviceDependencies = List(zioCats, zioTest, zioTestSbt, fs2Core, canoe, slf4j) ++ circe
 
   val backendDependencies = List(flyway, pureconfig, h2)
 
