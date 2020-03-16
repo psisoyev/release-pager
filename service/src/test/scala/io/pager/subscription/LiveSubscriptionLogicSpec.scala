@@ -3,7 +3,7 @@ package subscription
 
 import io.pager.Generators._
 import io.pager.client.telegram.ChatId
-import io.pager.logging.Logger
+import io.pager.log.Logger
 import io.pager.subscription.Repository.{ Name, Version }
 import zio._
 import zio.test.Assertion._
@@ -25,7 +25,7 @@ object LiveSubscriptionLogicSpec extends DefaultRunnableSpec {
     (Logger.silent ++ chatStorage ++ repositoryVersionStorage) >>> SubscriptionLogic.live
   }
 
-  def spec = suite("LiveSubscriptionLogicSpec")(
+  override def spec: ZSpec[Environment, Failure] = suite("LiveSubscriptionLogicSpec")(
     testM("return empty subscriptions") {
       checkM(chatId) { chatId =>
         val result = SubscriptionLogic.listSubscriptions(chatId).provideLayer(service())
