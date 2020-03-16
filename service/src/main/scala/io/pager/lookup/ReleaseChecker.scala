@@ -11,7 +11,6 @@ import io.pager.subscription.Repository.{ Name, Version }
 import io.pager.subscription.SubscriptionLogic.SubscriptionLogic
 import io.pager.subscription.{ Repository, SubscriptionLogic }
 import zio._
-
 import scala.util.Try
 
 object ReleaseChecker {

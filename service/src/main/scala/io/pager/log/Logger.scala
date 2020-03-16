@@ -23,10 +23,10 @@ object Logger {
     def error(t: Throwable)(message: => String): UIO[Unit]
   }
 
-  val console: URLayer[Clock with ConsoleZIO, Has[Service]] =
+  def console: URLayer[Clock with ConsoleZIO, Has[Service]] =
     ZLayer.fromServices[Clock.Service, ConsoleZIO.Service, Service] { (clock, console) =>
       Console(clock, console)
     }
 
-  val silent: ULayer[Logger] = ZLayer.succeed(Silent)
+  def silent: ULayer[Logger] = ZLayer.succeed(Silent)
 }

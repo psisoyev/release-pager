@@ -23,7 +23,7 @@ object SubscriptionLogic {
   }
 
   type LiveDeps = Logger with ChatStorage with RepositoryVersionStorage
-  val live: ZLayer[LiveDeps, Nothing, Has[Service]] =
+  def live: ZLayer[LiveDeps, Nothing, Has[Service]] =
     ZLayer.fromServices[Logger.Service, ChatStorage.Service, RepositoryVersionStorage.Service, Service] {
       (logger, chatStorage, repositoryVersionStorage) =>
         Live(logger, chatStorage, repositoryVersionStorage)

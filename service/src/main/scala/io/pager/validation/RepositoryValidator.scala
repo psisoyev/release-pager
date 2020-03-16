@@ -16,7 +16,7 @@ object RepositoryValidator {
   }
 
   type LiveDeps = Logger with GitHubClient
-  val live: ZLayer[LiveDeps, Nothing, Has[Service]] =
+  def live: ZLayer[LiveDeps, Nothing, Has[Service]] =
     ZLayer.fromServices[Logger.Service, GitHubClient.Service, Service] { (logger, gitHubClient) =>
       GitHub(logger, gitHubClient)
     }
