@@ -9,6 +9,7 @@ import org.http4s.client.Client
 import zio.ZLayer.NoDeps
 import zio.{ Task, _ }
 import zio.interop.catz._
+import io.pager.client.http.Http4s
 
 object HttpClient {
   type HttpClient = Has[Service]
@@ -17,23 +18,7 @@ object HttpClient {
     def get[T](uri: String)(implicit d: Decoder[T]): IO[PagerError, T]
   }
 
-  final case class Http4s(client: Client[Task]) extends Service {
-    implicit def entityDecoder[A](implicit decoder: Decoder[A]): EntityDecoder[Task, A] = jsonOf[Task, A]
-    implicit def entityEncoder[A](implicit encoder: Encoder[A]): EntityEncoder[Task, A] = jsonEncoderOf[Task, A]
-
-    def get[T](uri: String)(implicit d: Decoder[T]): IO[PagerError, T] = {
-      def call(uri: Uri): IO[PagerError, T] =
-        client
-          .expect[T](uri)
-          .foldM(_ => IO.fail(NotFound(uri.renderString)), result => ZIO.succeed(result))
-
-      Uri
-        .fromString(uri)
-        .fold(_ => IO.fail(MalformedUrl(uri)), call)
-    }
-  }
-
-  val http4s: ZLayer[Has[Client[Task]], Nothing, Has[Service]] =
+  def http4s: ZLayer[Has[Client[Task]], Nothing, Has[Service]] =
     ZLayer.fromService[Client[Task], Service] { http4sClient: Client[Task] =>
       Http4s(http4sClient)
     }

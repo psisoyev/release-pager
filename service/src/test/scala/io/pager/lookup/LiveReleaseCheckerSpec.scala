@@ -7,7 +7,7 @@ import io.pager.client.github.GitHubClient.GitHubClient
 import io.pager.client.github.{ GitHubClient, GitHubClientMock }
 import io.pager.client.telegram.TelegramClient.TelegramClient
 import io.pager.client.telegram.{ ChatId, TelegramClient, TelegramClientMock }
-import io.pager.logging.Logger
+import io.pager.log.Logger
 import io.pager.subscription.Repository.{ Name, Version }
 import io.pager.subscription.SubscriptionLogic.SubscriptionLogic
 import io.pager.subscription.SubscriptionLogicMock
@@ -90,7 +90,7 @@ object LiveReleaseCheckerSpec extends DefaultRunnableSpec {
     gitHubClient: ULayer[GitHubClient],
     telegramClient: ULayer[TelegramClient],
     subscriptionLogic: ULayer[SubscriptionLogic]
-  ): ZIO[Clock with Console, Throwable, TestResult] = {
+  ): ZIO[ZEnv, Throwable, TestResult] = {
     val layer = (Logger.silent ++ gitHubClient ++ telegramClient ++ subscriptionLogic) >>> ReleaseChecker.live
 
     ReleaseChecker
