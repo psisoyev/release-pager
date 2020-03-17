@@ -1,12 +1,9 @@
 package io.pager.validation
 
-import io.pager.PagerError
 import io.pager.PagerError.NotFound
-import io.pager.client.github.GitHubClient.GitHubClient
-import io.pager.client.github.{ GitHubClient, GitHubClientMock, GitHubRelease }
+import io.pager.client.github.GitHubClientMock
 import io.pager.log.Logger
 import io.pager.subscription.Repository.Name
-import zio._
 import zio.test.Assertion._
 import zio.test._
 import zio.test.mock.Expectation._

@@ -1,9 +1,9 @@
 package io.pager.log
 
+import io.pager.ThrowableOps._
+import zio.UIO
 import zio.clock._
 import zio.console.{ Console => ConsoleZIO }
-import zio.UIO
-import io.pager.ThrowableOps._
 
 private[log] final case class Console(clock: Clock.Service, console: ConsoleZIO.Service) extends Logger.Service {
   def error(message: => String): UIO[Unit] = print(message)

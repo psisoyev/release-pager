@@ -2,13 +2,13 @@ package io.pager
 package subscription
 
 import io.pager.Generators._
+import io.pager.TestData._
 import io.pager.client.telegram.ChatId
 import io.pager.log.Logger
 import io.pager.subscription.Repository.{ Name, Version }
 import zio._
 import zio.test.Assertion._
 import zio.test._
-import TestData._
 
 object LiveSubscriptionLogicSpec extends DefaultRunnableSpec {
 

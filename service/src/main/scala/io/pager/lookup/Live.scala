@@ -1,18 +1,14 @@
 package io.pager.lookup
 
-import io.pager.log.Logger
+import io.pager.PagerError
 import io.pager.client.github.GitHubClient
 import io.pager.client.telegram.TelegramClient
-import io.pager.subscription.SubscriptionLogic
-import zio.UIO
-import io.pager.subscription.Repository.Name
-import io.pager.subscription.Repository.Version
-import zio.Task
-import zio.ZIO
-import io.pager.subscription.Repository
-import zio.IO
+import io.pager.log.Logger
+import io.pager.subscription.Repository.{ Name, Version }
+import io.pager.subscription.{ Repository, SubscriptionLogic }
+import zio.{ IO, Task, ZIO }
+
 import scala.util.Try
-import io.pager.PagerError
 
 private[lookup] final case class Live(
   logger: Logger.Service,

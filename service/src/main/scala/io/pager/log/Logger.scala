@@ -1,10 +1,8 @@
 package io.pager.log
 
-import io.pager.ThrowableOps._
-import zio.{ Has, UIO, ULayer, URLayer, ZLayer }
+import zio._
 import zio.clock._
 import zio.console.{ Console => ConsoleZIO }
-import io.pager.log.Silent
 
 object Logger {
   type Logger = Has[Service]

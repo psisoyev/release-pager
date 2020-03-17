@@ -6,7 +6,7 @@ import io.pager.client.http.HttpClient.HttpClient
 import io.pager.log.Logger
 import io.pager.log.Logger.Logger
 import io.pager.subscription.Repository.Name
-import zio.{ Has, IO, Layer, ULayer, URLayer, ZIO, ZLayer }
+import zio._
 
 object GitHubClient {
   type GitHubClient = Has[Service]

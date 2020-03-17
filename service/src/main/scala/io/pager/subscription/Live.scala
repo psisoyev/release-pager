@@ -1,11 +1,9 @@
 package io.pager.subscription
 
-import io.pager.log.Logger
 import io.pager.client.telegram.ChatId
-import io.pager.subscription.Repository.Name
-import zio.Task
-import io.pager.subscription.Repository.Version
-import zio.ZIO
+import io.pager.log.Logger
+import io.pager.subscription.Repository.{ Name, Version }
+import zio.{ Task, ZIO }
 
 private[subscription] final case class Live(
   logger: Logger.Service,

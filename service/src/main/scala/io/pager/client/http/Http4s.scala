@@ -1,18 +1,13 @@
 package io.pager.client.http
 
-import org.http4s.EntityDecoder
-import io.circe.Decoder
-import org.http4s._
+import io.circe.{ Decoder, Encoder }
+import io.pager.PagerError
+import io.pager.PagerError.{ MalformedUrl, NotFound }
 import org.http4s.circe._
 import org.http4s.client.Client
-import io.pager.PagerError.NotFound
-import io.pager.PagerError.MalformedUrl
-import zio.Task
-import io.circe.Encoder
-import zio.IO
-import io.pager.PagerError
-import zio.ZIO
+import org.http4s.{ EntityDecoder, _ }
 import zio.interop.catz._
+import zio.{ IO, Task, ZIO }
 
 private[http] final case class Http4s(client: Client[Task]) extends HttpClient.Service {
   implicit def entityDecoder[A](implicit decoder: Decoder[A]): EntityDecoder[Task, A] = jsonOf[Task, A]

@@ -1,14 +1,13 @@
 package io.pager.client.telegram
 
 import canoe.api.models.ChatApi
+import canoe.api.{ TelegramClient => Client, _ }
 import canoe.models.PrivateChat
 import canoe.models.outgoing.TextContent
-import io.pager.log.Logger
-import io.pager.client.telegram.TelegramClient
-import canoe.api.{ TelegramClient => Client, _ }
-import zio.{ Task, ZIO }
-import zio.interop.catz._
 import io.pager.client.telegram.scenario.CanoeScenarios
+import io.pager.log.Logger
+import zio.interop.catz._
+import zio.{ Task, ZIO }
 
 private[telegram] final case class Canoe(
   logger: Logger.Service,

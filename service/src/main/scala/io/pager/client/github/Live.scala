@@ -1,17 +1,15 @@
 package io.pager.client.github
 
-import io.pager.log.Logger
-import io.pager.subscription.Repository.Name
+import io.circe.Decoder
 import io.circe.generic.extras.semiauto.deriveUnwrappedDecoder
 import io.circe.generic.semiauto.deriveDecoder
-import io.pager.client.http.HttpClient
-import zio.IO
 import io.pager.PagerError
-import zio.ZIO
 import io.pager.PagerError.NotFound
-import io.circe.Decoder
-import io.pager.subscription.Repository.Version
-import Live._
+import io.pager.client.github.Live._
+import io.pager.client.http.HttpClient
+import io.pager.log.Logger
+import io.pager.subscription.Repository.{ Name, Version }
+import zio.{ IO, ZIO }
 
 private[github] final case class Live(logger: Logger.Service, httpClient: HttpClient.Service) extends GitHubClient.Service {
   override def repositoryExists(name: Name): IO[PagerError, Name] =

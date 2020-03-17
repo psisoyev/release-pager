@@ -3,10 +3,10 @@ package io.pager.subscription
 import io.pager.client.telegram.ChatId
 import io.pager.log.Logger
 import io.pager.log.Logger.Logger
-import io.pager.subscription.Repository.{ Name, Version }
-import zio.{ Has, RIO, Task, ZIO, ZLayer }
 import io.pager.subscription.ChatStorage.ChatStorage
+import io.pager.subscription.Repository.{ Name, Version }
 import io.pager.subscription.RepositoryVersionStorage.RepositoryVersionStorage
+import zio._
 
 object SubscriptionLogic {
   type SubscriptionLogic = Has[Service]

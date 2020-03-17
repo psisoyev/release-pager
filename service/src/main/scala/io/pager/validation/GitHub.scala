@@ -1,11 +1,10 @@
 package io.pager.validation
 
-import io.pager.log.Logger
-import io.pager.client.github.GitHubClient
-import io.pager.validation.RepositoryValidator
-import zio.IO
-import io.pager.subscription.Repository.Name
 import io.pager.PagerError
+import io.pager.client.github.GitHubClient
+import io.pager.log.Logger
+import io.pager.subscription.Repository.Name
+import zio.IO
 
 private[validation] final case class GitHub(
   logger: Logger.Service,

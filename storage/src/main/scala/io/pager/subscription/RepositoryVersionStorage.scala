@@ -3,10 +3,8 @@ package io.pager.subscription
 import doobie.implicits._
 import doobie.util.transactor.Transactor
 import doobie.{ Query0, Update0 }
-import io.pager.subscription.ChatStorage.{ Doobie, Service }
 import io.pager.subscription.Repository.{ Name, Version }
 import io.pager.subscription.RepositoryVersionStorage.Doobie.SQL
-import zio.ZLayer.NoDeps
 import zio._
 import zio.interop.catz._
 

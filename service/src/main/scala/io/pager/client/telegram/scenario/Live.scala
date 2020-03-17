@@ -4,13 +4,12 @@ import canoe.api._
 import canoe.models.Chat
 import canoe.models.messages.TextMessage
 import canoe.syntax._
+import io.pager.PagerError
+import io.pager.client.telegram.ChatId
+import io.pager.subscription.Repository.Name
 import io.pager.subscription.SubscriptionLogic
 import io.pager.validation.RepositoryValidator
 import zio._
-import io.pager.PagerError
-import io.pager.subscription.Repository.Name
-import io.pager.client.telegram.ChatId
-import io.pager.client.telegram.scenario.CanoeScenarios
 
 private[scenario] final case class Live(
   repositoryValidator: RepositoryValidator.Service,

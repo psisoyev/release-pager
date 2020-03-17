@@ -8,12 +8,10 @@ import io.pager.Config.DBConfig
 import io.pager.PagerError.{ ConfigurationError, MissingBotToken }
 import io.pager.client.github.GitHubClient
 import io.pager.client.http.HttpClient
-import io.pager.client.telegram.TelegramClient.TelegramClient
-import io.pager.client.telegram.scenario.CanoeScenarios
 import io.pager.client.telegram.TelegramClient
-import io.pager.log._
+import io.pager.client.telegram.scenario.CanoeScenarios
+import io.pager.log.Logger
 import io.pager.lookup.ReleaseChecker
-import io.pager.lookup.ReleaseChecker.ReleaseChecker
 import io.pager.subscription.{ ChatStorage, RepositoryVersionStorage, SubscriptionLogic }
 import io.pager.validation.RepositoryValidator
 import org.http4s.client.Client
@@ -21,16 +19,14 @@ import org.http4s.client.blaze.BlazeClientBuilder
 import pureconfig.ConfigSource
 import zio._
 import zio.blocking.Blocking
-import zio.console.{ putStrLn, Console }
+import zio.console.putStrLn
 import zio.duration._
 import zio.interop.catz._
 import zio.system._
 import pureconfig.generic.auto._
-import zio.clock.Clock
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits
-import io.pager.log.Logger
 
 object Main extends zio.App {
 

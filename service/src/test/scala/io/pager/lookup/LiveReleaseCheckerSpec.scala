@@ -12,8 +12,6 @@ import io.pager.subscription.Repository.{ Name, Version }
 import io.pager.subscription.SubscriptionLogic.SubscriptionLogic
 import io.pager.subscription.SubscriptionLogicMock
 import zio._
-import zio.clock.Clock
-import zio.console.Console
 import zio.test.Assertion._
 import zio.test.mock.Expectation._
 import zio.test.{ DefaultRunnableSpec, _ }

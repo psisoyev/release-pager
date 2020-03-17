@@ -1,16 +1,10 @@
 package io.pager.client.telegram.scenario
 
 import canoe.api.{ TelegramClient => Client, _ }
-import canoe.models.Chat
-import canoe.models.messages.TextMessage
-import canoe.syntax._
-import io.pager.PagerError
-import io.pager.subscription.Repository.Name
 import io.pager.subscription.SubscriptionLogic
 import io.pager.subscription.SubscriptionLogic.SubscriptionLogic
 import io.pager.validation.RepositoryValidator
 import io.pager.validation.RepositoryValidator.RepositoryValidator
-import io.pager.client.telegram.scenario.Live
 import zio._
 
 object CanoeScenarios {
@@ -25,7 +19,8 @@ object CanoeScenarios {
     def list: Scenario[Task, Unit]
   }
 
-  def live: ZLayer[Has[Client[Task]] with RepositoryValidator with SubscriptionLogic, Nothing, Has[Service]] =
+  type LiveDeps = Has[Client[Task]] with RepositoryValidator with SubscriptionLogic
+  def live: URLayer[LiveDeps, Has[Service]] =
     ZLayer.fromServices[Client[Task], RepositoryValidator.Service, SubscriptionLogic.Service, Service] {
       (client, repositoryValidator, subscriptionLogic) =>
         Live(repositoryValidator, subscriptionLogic, client)

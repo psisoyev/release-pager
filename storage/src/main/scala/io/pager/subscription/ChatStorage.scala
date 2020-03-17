@@ -1,13 +1,13 @@
 package io.pager.subscription
 
-import doobie.util.transactor.Transactor
 import doobie.implicits._
 import doobie.util.query.Query0
+import doobie.util.transactor.Transactor
 import doobie.util.update.Update0
 import io.pager.client.telegram.ChatId
 import io.pager.subscription.Repository.Name
-import zio.interop.catz._
 import zio._
+import zio.interop.catz._
 
 object ChatStorage {
   type ChatStorage = Has[Service]
