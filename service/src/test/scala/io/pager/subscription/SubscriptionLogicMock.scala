@@ -3,7 +3,7 @@ package io.pager.subscription
 import io.pager.client.telegram.ChatId
 import io.pager.subscription.Repository.{ Name, Version }
 import io.pager.subscription.SubscriptionLogic.SubscriptionLogic
-import zio.test.mock
+import zio.test.mock.Proxy
 import zio.test.mock.Method
 import zio.{ Has, Task, URLayer, ZLayer }
 
@@ -16,7 +16,7 @@ object SubscriptionLogicMock {
   object updateVersions    extends Tag[Map[Name, Version], Unit]
 
   sealed class Tag[I, A] extends Method[SubscriptionLogic, I, A] {
-    override def envBuilder: URLayer[Has[mock.Proxy], SubscriptionLogic] = ZLayer.fromService { invoke =>
+    override def envBuilder: URLayer[Has[Proxy], SubscriptionLogic] = ZLayer.fromService { invoke =>
       new SubscriptionLogic.Service {
         override def subscribe(chatId: ChatId, name: Name): Task[Unit]               = invoke(SubscriptionLogicMock.subscribe, chatId, name)
         override def unsubscribe(chatId: ChatId, name: Name): Task[Unit]             = invoke(SubscriptionLogicMock.unsubscribe, chatId, name)
