@@ -17,9 +17,9 @@ private[telegram] final case class Canoe(
 
   implicit val canoe: Client[Task] = canoeClient
 
-  def broadcastMessage(subscribers: Set[ChatId], message: String): Task[Unit] =
+  def broadcastMessage(receivers: Set[ChatId], message: String): Task[Unit] =
     ZIO
-      .foreach(subscribers) { chatId =>
+      .foreach(receivers) { chatId =>
         val api = new ChatApi(PrivateChat(chatId.value, None, None, None))
         api.send(TextContent(message))
       }

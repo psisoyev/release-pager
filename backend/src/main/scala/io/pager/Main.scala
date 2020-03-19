@@ -12,7 +12,9 @@ import io.pager.client.telegram.TelegramClient
 import io.pager.client.telegram.scenario.CanoeScenarios
 import io.pager.log.Logger
 import io.pager.lookup.ReleaseChecker
-import io.pager.subscription.{ ChatStorage, RepositoryVersionStorage, SubscriptionLogic }
+import io.pager.subscription.chat.ChatStorage
+import io.pager.subscription.SubscriptionLogic
+import io.pager.subscription.repository.RepositoryVersionStorage
 import io.pager.validation.RepositoryValidator
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder

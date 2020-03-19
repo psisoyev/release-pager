@@ -6,6 +6,8 @@ import io.pager.TestData._
 import io.pager.client.telegram.ChatId
 import io.pager.log.Logger
 import io.pager.subscription.Repository.{ Name, Version }
+import io.pager.subscription.chat.ChatStorage
+import io.pager.subscription.repository.RepositoryVersionStorage
 import zio._
 import zio.test.Assertion._
 import zio.test._

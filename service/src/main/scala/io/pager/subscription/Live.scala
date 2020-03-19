@@ -3,6 +3,8 @@ package io.pager.subscription
 import io.pager.client.telegram.ChatId
 import io.pager.log.Logger
 import io.pager.subscription.Repository.{ Name, Version }
+import io.pager.subscription.chat.ChatStorage
+import io.pager.subscription.repository.RepositoryVersionStorage
 import zio.{ Task, ZIO }
 
 private[subscription] final case class Live(
