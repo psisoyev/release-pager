@@ -48,7 +48,7 @@ object Settings {
   }
 
   val storageDependencies = List(zio, zioCats) ++ doobie
-  val serviceDependencies = List(zioCats, zioTest, zioTestSbt, fs2Core, canoe, slf4j) ++ circe
+  val serviceDependencies = List(zioCats, zioMacros, zioTest, zioTestSbt, fs2Core, canoe, slf4j) ++ circe
 
   val backendDependencies = List(flyway, pureconfig, h2)
 

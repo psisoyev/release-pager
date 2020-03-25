@@ -15,12 +15,12 @@ import zio.test._
 object LiveSubscriptionLogicSpec extends DefaultRunnableSpec {
 
   type RepositoryMap   = ULayer[Has[Ref[Map[Name, Option[Version]]]]]
-  type SubscriptionMap = ULayer[Has[Ref[Map[ChatId, Set[Repository.Name]]]]]
+  type SubscriptionMap = ULayer[Has[Ref[Map[ChatId, Set[Name]]]]]
 
   private def service(
     subscriptionMap: Map[ChatId, Set[Name]] = Map.empty,
     repositoryMap: Map[Name, Option[Version]] = Map.empty
-  ): ZLayer[Any, Nothing, Has[SubscriptionLogic.Service]] = {
+  ): ULayer[Has[SubscriptionLogic.Service]] = {
     val chatStorage              = Ref.make(subscriptionMap).toLayer >>> ChatStorage.inMemory
     val repositoryVersionStorage = Ref.make(repositoryMap).toLayer >>> RepositoryVersionStorage.inMemory
 

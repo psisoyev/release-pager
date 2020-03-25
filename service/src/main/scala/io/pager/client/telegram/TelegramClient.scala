@@ -6,7 +6,9 @@ import io.pager.client.telegram.scenario.CanoeScenarios.CanoeScenarios
 import io.pager.log.Logger
 import io.pager.log.Logger.Logger
 import zio._
+import zio.macros.accessible
 
+@accessible
 object TelegramClient {
   type TelegramClient = Has[Service]
 
@@ -26,6 +28,4 @@ object TelegramClient {
       override def start: Task[Unit]                                                     = ???
       override def broadcastMessage(receivers: Set[ChatId], message: String): Task[Unit] = ???
     })
-
-  def start: ZIO[TelegramClient, Throwable, Unit] = ZIO.accessM(_.get.start)
 }

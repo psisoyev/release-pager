@@ -9,7 +9,9 @@ import io.pager.log._
 import io.pager.subscription.SubscriptionLogic
 import io.pager.subscription.SubscriptionLogic.SubscriptionLogic
 import zio._
+import zio.macros.accessible
 
+@accessible
 object ReleaseChecker {
   type ReleaseChecker = Has[Service]
 
@@ -23,6 +25,4 @@ object ReleaseChecker {
       (logger, githubClient, telegramClient, subscriptionLogic) =>
         Live(logger, githubClient, telegramClient, subscriptionLogic)
     }
-
-  def scheduleRefresh: ZIO[ReleaseChecker, Throwable, Unit] = ZIO.accessM(_.get.scheduleRefresh)
 }

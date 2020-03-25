@@ -9,7 +9,9 @@ import io.pager.subscription.repository.RepositoryVersionStorage.RepositoryVersi
 import io.pager.subscription.chat.ChatStorage
 import io.pager.subscription.repository.RepositoryVersionStorage
 import zio._
+import zio.macros.accessible
 
+@accessible
 object SubscriptionLogic {
   type SubscriptionLogic = Has[Service]
 
@@ -25,19 +27,9 @@ object SubscriptionLogic {
   }
 
   type LiveDeps = Logger with ChatStorage with RepositoryVersionStorage
-  def live: ZLayer[LiveDeps, Nothing, Has[Service]] =
+  def live: URLayer[LiveDeps, Has[Service]] =
     ZLayer.fromServices[Logger.Service, ChatStorage.Service, RepositoryVersionStorage.Service, Service] {
       (logger, chatStorage, repositoryVersionStorage) =>
         Live(logger, chatStorage, repositoryVersionStorage)
     }
-
-  def subscribe(chatId: ChatId, name: Name): RIO[SubscriptionLogic, Unit]   = ZIO.accessM[SubscriptionLogic](_.get.subscribe(chatId, name))
-  def unsubscribe(chatId: ChatId, name: Name): RIO[SubscriptionLogic, Unit] = ZIO.accessM[SubscriptionLogic](_.get.unsubscribe(chatId, name))
-
-  def listSubscriptions(chatId: ChatId): RIO[SubscriptionLogic, Set[Name]] = ZIO.accessM[SubscriptionLogic](_.get.listSubscriptions(chatId))
-  def listRepositories: RIO[SubscriptionLogic, Map[Name, Option[Version]]] = ZIO.accessM[SubscriptionLogic](_.get.listRepositories)
-  def listSubscribers(name: Name): RIO[SubscriptionLogic, Set[ChatId]]     = ZIO.accessM[SubscriptionLogic](_.get.listSubscribers(name))
-
-  def updateVersions(updatedVersions: Map[Name, Version]): RIO[SubscriptionLogic, Unit] =
-    ZIO.accessM[SubscriptionLogic](_.get.updateVersions(updatedVersions))
 }
