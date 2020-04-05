@@ -22,8 +22,8 @@ object LiveReleaseCheckerSpec extends DefaultRunnableSpec {
       val gitHubClientMocks: ULayer[GitHubClient]     = GitHubClient.empty
       val telegramClientMocks: ULayer[TelegramClient] = TelegramClient.empty
       val subscriptionMocks: ULayer[SubscriptionLogic] =
-        (SubscriptionLogicMock.listRepositories returns value(Map.empty[Name, Option[Version]])) andThen
-          (SubscriptionLogicMock.updateVersions(equalTo(Map.empty[Name, Version])) returns unit)
+        SubscriptionLogicMock.listRepositories(value(Map.empty[Name, Option[Version]])) ++
+          SubscriptionLogicMock.updateVersions(equalTo(Map.empty[Name, Version]), unit)
 
       successfullyScheduleRefresh(gitHubClientMocks, telegramClientMocks, subscriptionMocks)
     },
@@ -31,11 +31,11 @@ object LiveReleaseCheckerSpec extends DefaultRunnableSpec {
       checkM(repositoryName) { name =>
         val repositories = Map(name -> Some(finalVersion))
 
-        val gitHubClientMocks: ULayer[GitHubClient]     = GitHubClientMock.releases(equalTo(name)) returns value(List(finalRelease))
+        val gitHubClientMocks: ULayer[GitHubClient]     = GitHubClientMock.releases(equalTo(name), value(List(finalRelease)))
         val telegramClientMocks: ULayer[TelegramClient] = TelegramClient.empty
         val subscriptionMocks: ULayer[SubscriptionLogic] =
-          (SubscriptionLogicMock.listRepositories returns value(repositories)) andThen
-            (SubscriptionLogicMock.updateVersions(equalTo(Map.empty[Name, Version])) returns unit)
+          SubscriptionLogicMock.listRepositories(value(repositories)) ++
+            SubscriptionLogicMock.updateVersions(equalTo(Map.empty[Name, Version]), unit)
 
         successfullyScheduleRefresh(gitHubClientMocks, telegramClientMocks, subscriptionMocks)
       }
@@ -44,12 +44,12 @@ object LiveReleaseCheckerSpec extends DefaultRunnableSpec {
       checkM(repositoryName) { name =>
         val repositories = Map(name -> None)
 
-        val gitHubClientMocks   = GitHubClientMock.releases(equalTo(name)) returns value(List(finalRelease))
-        val telegramClientMocks = TelegramClientMock.broadcastMessage(equalTo(Set.empty[ChatId], message(name))) returns unit
+        val gitHubClientMocks   = GitHubClientMock.releases(equalTo(name), value(List(finalRelease)))
+        val telegramClientMocks = TelegramClientMock.broadcastMessage(equalTo(Set.empty[ChatId], message(name)), unit)
         val subscriptionMocks =
-          (SubscriptionLogicMock.listRepositories returns value(repositories)) andThen
-            (SubscriptionLogicMock.updateVersions(equalTo(Map(name -> finalVersion))) returns unit) andThen
-            (SubscriptionLogicMock.listSubscribers(equalTo(name)) returns value(Set.empty))
+          SubscriptionLogicMock.listRepositories(value(repositories)) ++
+            SubscriptionLogicMock.updateVersions(equalTo(Map(name -> finalVersion)), unit) ++
+            SubscriptionLogicMock.listSubscribers(equalTo(name), value(Set.empty))
 
         successfullyScheduleRefresh(gitHubClientMocks, telegramClientMocks, subscriptionMocks)
       }
@@ -60,12 +60,12 @@ object LiveReleaseCheckerSpec extends DefaultRunnableSpec {
           val repositories = Map(name -> Some(rcVersion))
           val subscribers  = Set(chatId1, chatId2)
 
-          val gitHubClientMocks   = GitHubClientMock.releases(equalTo(name)) returns value(releases)
-          val telegramClientMocks = TelegramClientMock.broadcastMessage(equalTo((subscribers, message(name)))) returns unit
+          val gitHubClientMocks   = GitHubClientMock.releases(equalTo(name), value(releases))
+          val telegramClientMocks = TelegramClientMock.broadcastMessage(equalTo((subscribers, message(name))), unit)
           val subscriptionMocks =
-            (SubscriptionLogicMock.listRepositories returns value(repositories)) andThen
-              (SubscriptionLogicMock.updateVersions(equalTo(Map(name -> finalVersion))) returns unit) andThen
-              (SubscriptionLogicMock.listSubscribers(equalTo(name)) returns value(subscribers))
+            SubscriptionLogicMock.listRepositories(value(repositories)) ++
+              SubscriptionLogicMock.updateVersions(equalTo(Map(name -> finalVersion)), unit) ++
+              SubscriptionLogicMock.listSubscribers(equalTo(name), value(subscribers))
 
           successfullyScheduleRefresh(gitHubClientMocks, telegramClientMocks, subscriptionMocks)
       }
@@ -74,9 +74,9 @@ object LiveReleaseCheckerSpec extends DefaultRunnableSpec {
       checkM(repositoryName) { name =>
         val repositories        = Map(name -> Some(rcVersion))
         val error               = NotFound(name.value)
-        val gitHubClientMocks   = GitHubClientMock.releases(equalTo(name)) returns failure(error)
+        val gitHubClientMocks   = GitHubClientMock.releases(equalTo(name), failure(error))
         val telegramClientMocks = TelegramClient.empty
-        val subscriptionMocks   = (SubscriptionLogicMock.listRepositories returns value(repositories))
+        val subscriptionMocks   = SubscriptionLogicMock.listRepositories(value(repositories))
 
         val result = successfullyScheduleRefresh(gitHubClientMocks, telegramClientMocks, subscriptionMocks)
         assertM(result.run)(fails(equalTo(error)))

@@ -1,23 +1,22 @@
 package io.pager.client.telegram
 
 import io.pager.client.telegram.TelegramClient.TelegramClient
-import zio.test.mock.Proxy
-import zio.test.mock.Method
+import zio.test.mock._
 import zio.{ Has, Task, URLayer, ZLayer }
 
-object TelegramClientMock {
-  object start            extends Tag[Unit, Unit]
-  object broadcastMessage extends Tag[(Set[ChatId], String), Unit]
+object TelegramClientMock extends Mock[TelegramClient] {
+  object start            extends Effect[Unit, Throwable, Unit]
+  object broadcastMessage extends Effect[(Set[ChatId], String), Throwable, Unit]
 
-  sealed class Tag[I, A] extends Method[TelegramClient, I, A] {
-    override def envBuilder: URLayer[Has[Proxy], TelegramClient] = ZLayer.fromService { invoke =>
+  val compose: URLayer[Has[Proxy], TelegramClient] =
+    ZLayer.fromService { proxy =>
       new TelegramClient.Service {
         override def start: Task[Unit] =
-          invoke(TelegramClientMock.start)
+          proxy(TelegramClientMock.start)
+
         override def broadcastMessage(subscribers: Set[ChatId], message: String): Task[Unit] =
-          invoke(TelegramClientMock.broadcastMessage, subscribers, message)
+          proxy(TelegramClientMock.broadcastMessage, subscribers, message)
       }
     }
-  }
 
 }

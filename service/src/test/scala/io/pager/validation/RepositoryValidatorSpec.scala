@@ -13,15 +13,16 @@ object RepositoryValidatorSpec extends DefaultRunnableSpec {
   override def spec: ZSpec[Environment, Failure] = suite("RepositoryValidatorSpec")(
     testM("successfully validate existing repository by name") {
       val repo             = Name("zio/zio")
-      val gitHubClientMock = GitHubClientMock.repositoryExists(equalTo(repo)) returns value(repo)
+      val gitHubClientMock = GitHubClientMock.repositoryExists(equalTo(repo), value(repo))
       val layer            = (Logger.silent ++ gitHubClientMock) >>> RepositoryValidator.live
+
       assertM(RepositoryValidator.validate(repo.value))(equalTo(repo)).provideLayer(layer)
     },
     testM("fail to validate non-existing portfolio") {
       val repo     = Name("ololo")
       val notFound = NotFound("ololo")
 
-      val gitHubClientMock = GitHubClientMock.repositoryExists(equalTo(repo)) returns failure(notFound)
+      val gitHubClientMock = GitHubClientMock.repositoryExists(equalTo(repo), failure(notFound))
       val layer            = (Logger.silent ++ gitHubClientMock) >>> RepositoryValidator.live
 
       assertM(RepositoryValidator.validate(repo.value).flip)(equalTo(notFound)).provideLayer(layer)
