@@ -31,7 +31,7 @@ object LiveReleaseCheckerSpec extends DefaultRunnableSpec {
       checkM(repositoryName) { name =>
         val repositories = Map(name -> Some(finalVersion))
 
-        val gitHubClientMocks: ULayer[GitHubClient]     = GitHubClientMock.releases(equalTo(name), value(List(finalRelease)))
+        val gitHubClientMocks: ULayer[GitHubClient]     = GitHubClientMock.Releases(equalTo(name), value(List(finalRelease)))
         val telegramClientMocks: ULayer[TelegramClient] = TelegramClient.empty
         val subscriptionMocks: ULayer[SubscriptionLogic] =
           SubscriptionLogicMock.listRepositories(value(repositories)) ++
@@ -44,7 +44,7 @@ object LiveReleaseCheckerSpec extends DefaultRunnableSpec {
       checkM(repositoryName) { name =>
         val repositories = Map(name -> None)
 
-        val gitHubClientMocks   = GitHubClientMock.releases(equalTo(name), value(List(finalRelease)))
+        val gitHubClientMocks   = GitHubClientMock.Releases(equalTo(name), value(List(finalRelease)))
         val telegramClientMocks = TelegramClientMock.broadcastMessage(equalTo(Set.empty[ChatId], message(name)), unit)
         val subscriptionMocks =
           SubscriptionLogicMock.listRepositories(value(repositories)) ++
@@ -60,7 +60,7 @@ object LiveReleaseCheckerSpec extends DefaultRunnableSpec {
           val repositories = Map(name -> Some(rcVersion))
           val subscribers  = Set(chatId1, chatId2)
 
-          val gitHubClientMocks   = GitHubClientMock.releases(equalTo(name), value(releases))
+          val gitHubClientMocks   = GitHubClientMock.Releases(equalTo(name), value(releases))
           val telegramClientMocks = TelegramClientMock.broadcastMessage(equalTo((subscribers, message(name))), unit)
           val subscriptionMocks =
             SubscriptionLogicMock.listRepositories(value(repositories)) ++
@@ -74,7 +74,7 @@ object LiveReleaseCheckerSpec extends DefaultRunnableSpec {
       checkM(repositoryName) { name =>
         val repositories        = Map(name -> Some(rcVersion))
         val error               = NotFound(name.value)
-        val gitHubClientMocks   = GitHubClientMock.releases(equalTo(name), failure(error))
+        val gitHubClientMocks   = GitHubClientMock.Releases(equalTo(name), failure(error))
         val telegramClientMocks = TelegramClient.empty
         val subscriptionMocks   = SubscriptionLogicMock.listRepositories(value(repositories))
 
