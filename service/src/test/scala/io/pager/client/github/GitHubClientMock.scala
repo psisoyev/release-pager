@@ -1,7 +1,7 @@
 package io.pager.client.github
 
 import zio.test.mock.mockable
-//
+
 @mockable[GitHubClient.Service]
 object GitHubClientMock
 
