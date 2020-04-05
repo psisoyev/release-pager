@@ -7,33 +7,33 @@ import zio.test.mock._
 import zio.{ Has, Task, URLayer, ZLayer }
 
 object SubscriptionLogicMock extends Mock[SubscriptionLogic] {
-  object subscribe         extends Effect[(ChatId, Name), Throwable, Unit]
-  object unsubscribe       extends Effect[(ChatId, Name), Throwable, Unit]
-  object listSubscriptions extends Effect[ChatId, Throwable, Set[Name]]
-  object listRepositories  extends Effect[Unit, Throwable, Map[Name, Option[Version]]]
-  object listSubscribers   extends Effect[Name, Throwable, Set[ChatId]]
-  object updateVersions    extends Effect[Map[Name, Version], Throwable, Unit]
+  object Subscribe         extends Effect[(ChatId, Name), Throwable, Unit]
+  object Unsubscribe       extends Effect[(ChatId, Name), Throwable, Unit]
+  object ListSubscriptions extends Effect[ChatId, Throwable, Set[Name]]
+  object ListRepositories  extends Effect[Unit, Throwable, Map[Name, Option[Version]]]
+  object ListSubscribers   extends Effect[Name, Throwable, Set[ChatId]]
+  object UpdateVersions    extends Effect[Map[Name, Version], Throwable, Unit]
 
   val compose: URLayer[Has[Proxy], SubscriptionLogic] =
     ZLayer.fromService { proxy =>
       new SubscriptionLogic.Service {
         override def subscribe(chatId: ChatId, name: Name): Task[Unit] =
-          proxy(SubscriptionLogicMock.subscribe, chatId, name)
+          proxy(SubscriptionLogicMock.Subscribe, chatId, name)
 
         override def unsubscribe(chatId: ChatId, name: Name): Task[Unit] =
-          proxy(SubscriptionLogicMock.unsubscribe, chatId, name)
+          proxy(SubscriptionLogicMock.Unsubscribe, chatId, name)
 
         override def listSubscriptions(chatId: ChatId): Task[Set[Name]] =
-          proxy(SubscriptionLogicMock.listSubscriptions, chatId)
+          proxy(SubscriptionLogicMock.ListSubscriptions, chatId)
 
         override def listRepositories: Task[Map[Name, Option[Version]]] =
-          proxy(SubscriptionLogicMock.listRepositories)
+          proxy(SubscriptionLogicMock.ListRepositories)
 
         override def listSubscribers(name: Name): Task[Set[ChatId]] =
-          proxy(SubscriptionLogicMock.listSubscribers, name)
+          proxy(SubscriptionLogicMock.ListSubscribers, name)
 
         override def updateVersions(updatedVersions: Map[Name, Version]): Task[Unit] =
-          proxy(SubscriptionLogicMock.updateVersions, updatedVersions)
+          proxy(SubscriptionLogicMock.UpdateVersions, updatedVersions)
       }
     }
 }
