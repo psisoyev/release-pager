@@ -5,7 +5,7 @@ import zio.test.mock.mockable
 @mockable[GitHubClient.Service]
 object GitHubClientMock
 
-// Using `mockable` we generate stuff below
+// Using `mockable` we generate code below
 //object GitHubClientMock extends Mock[GitHubClient] {
 //  object RepositoryExists extends Effect[Name, PagerError, Name]
 //  object Releases         extends Effect[Name, PagerError, List[GitHubRelease]]
