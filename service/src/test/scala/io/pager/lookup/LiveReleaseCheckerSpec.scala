@@ -21,11 +21,11 @@ object LiveReleaseCheckerSpec extends DefaultRunnableSpec {
     testM("Do not call services if there are no repositories") {
       val gitHubClientMocks: ULayer[GitHubClient]     = GitHubClient.empty
       val telegramClientMocks: ULayer[TelegramClient] = TelegramClient.empty
-      val subscriptionMocks: ULayer[SubscriptionLogic] =
+      val subscriptionLogicMocks: ULayer[SubscriptionLogic] =
         SubscriptionLogicMock.ListRepositories(value(Map.empty[Name, Option[Version]])) ++
           SubscriptionLogicMock.UpdateVersions(equalTo(Map.empty[Name, Version]), unit)
 
-      successfullyScheduleRefresh(gitHubClientMocks, telegramClientMocks, subscriptionMocks)
+      scheduleRefresh(gitHubClientMocks, telegramClientMocks, subscriptionLogicMocks)
     },
     testM("Do not bother subscribers if there are no version updates") {
       checkM(repositoryName) { name =>
@@ -33,11 +33,11 @@ object LiveReleaseCheckerSpec extends DefaultRunnableSpec {
 
         val gitHubClientMocks: ULayer[GitHubClient]     = GitHubClientMock.Releases(equalTo(name), value(List(finalRelease)))
         val telegramClientMocks: ULayer[TelegramClient] = TelegramClient.empty
-        val subscriptionMocks: ULayer[SubscriptionLogic] =
+        val subscriptionLogicMocks: ULayer[SubscriptionLogic] =
           SubscriptionLogicMock.ListRepositories(value(repositories)) ++
             SubscriptionLogicMock.UpdateVersions(equalTo(Map.empty[Name, Version]), unit)
 
-        successfullyScheduleRefresh(gitHubClientMocks, telegramClientMocks, subscriptionMocks)
+        scheduleRefresh(gitHubClientMocks, telegramClientMocks, subscriptionLogicMocks)
       }
     },
     testM("Update repository version for the very first time") {
@@ -46,12 +46,12 @@ object LiveReleaseCheckerSpec extends DefaultRunnableSpec {
 
         val gitHubClientMocks   = GitHubClientMock.Releases(equalTo(name), value(List(finalRelease)))
         val telegramClientMocks = TelegramClientMock.BroadcastMessage(equalTo(Set.empty[ChatId], message(name)), unit)
-        val subscriptionMocks =
+        val subscriptionLogicMocks =
           SubscriptionLogicMock.ListRepositories(value(repositories)) ++
             SubscriptionLogicMock.UpdateVersions(equalTo(Map(name -> finalVersion)), unit) ++
             SubscriptionLogicMock.ListSubscribers(equalTo(name), value(Set.empty))
 
-        successfullyScheduleRefresh(gitHubClientMocks, telegramClientMocks, subscriptionMocks)
+        scheduleRefresh(gitHubClientMocks, telegramClientMocks, subscriptionLogicMocks)
       }
     },
     testM("Notify users about new release") {
@@ -62,29 +62,29 @@ object LiveReleaseCheckerSpec extends DefaultRunnableSpec {
 
           val gitHubClientMocks   = GitHubClientMock.Releases(equalTo(name), value(releases))
           val telegramClientMocks = TelegramClientMock.BroadcastMessage(equalTo((subscribers, message(name))), unit)
-          val subscriptionMocks =
+          val subscriptionLogicMocks =
             SubscriptionLogicMock.ListRepositories(value(repositories)) ++
               SubscriptionLogicMock.UpdateVersions(equalTo(Map(name -> finalVersion)), unit) ++
               SubscriptionLogicMock.ListSubscribers(equalTo(name), value(subscribers))
 
-          successfullyScheduleRefresh(gitHubClientMocks, telegramClientMocks, subscriptionMocks)
+          scheduleRefresh(gitHubClientMocks, telegramClientMocks, subscriptionLogicMocks)
       }
     },
     testM("GitHub client error should be handled") {
       checkM(repositoryName) { name =>
-        val repositories        = Map(name -> Some(rcVersion))
-        val error               = NotFound(name.value)
-        val gitHubClientMocks   = GitHubClientMock.Releases(equalTo(name), failure(error))
-        val telegramClientMocks = TelegramClient.empty
-        val subscriptionMocks   = SubscriptionLogicMock.ListRepositories(value(repositories))
+        val repositories           = Map(name -> Some(rcVersion))
+        val error                  = NotFound(name.value)
+        val gitHubClientMocks      = GitHubClientMock.Releases(equalTo(name), failure(error))
+        val telegramClientMocks    = TelegramClient.empty
+        val subscriptionLogicMocks = SubscriptionLogicMock.ListRepositories(value(repositories))
 
-        val result = successfullyScheduleRefresh(gitHubClientMocks, telegramClientMocks, subscriptionMocks)
+        val result = scheduleRefresh(gitHubClientMocks, telegramClientMocks, subscriptionLogicMocks)
         assertM(result.run)(fails(equalTo(error)))
       }
     }
   )
 
-  private def successfullyScheduleRefresh(
+  private def scheduleRefresh(
     gitHubClient: ULayer[GitHubClient],
     telegramClient: ULayer[TelegramClient],
     subscriptionLogic: ULayer[SubscriptionLogic]
