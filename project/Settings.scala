@@ -31,14 +31,15 @@ object Settings {
         "-language:higherKinds",
         "-language:implicitConversions",
         "-Xcheckinit",
+        "-Ywarn-value-discard",
         "-Xfatal-warnings"
       ),
       javacOptions ++= Seq("-g", "-source", "1.8", "-target", "1.8", "-encoding", "UTF-8"),
       logLevel := Level.Info,
       version := (version in ThisBuild).value,
       scalafmtOnCompile := true,
-      wartremoverErrors in (Compile, compile) ++= warts,
-      wartremoverErrors in (Test, compile) ++= warts,
+//      wartremoverErrors in (Compile, compile) ++= warts,
+//      wartremoverErrors in (Test, compile) ++= warts,
       testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
 
       cancelable in Global := true,

@@ -20,9 +20,12 @@ object ReleaseChecker {
   }
 
   type LiveDeps = Logger with GitHubClient with TelegramClient with SubscriptionLogic
-  def live: URLayer[LiveDeps, Has[Service]] =
+  def live: URLayer[LiveDeps, Has[Service]] = {
+    ZIO.succeed(1)
+
     ZLayer.fromServices[Logger.Service, GitHubClient.Service, TelegramClient.Service, SubscriptionLogic.Service, ReleaseChecker.Service] {
       (logger, githubClient, telegramClient, subscriptionLogic) =>
         Live(logger, githubClient, telegramClient, subscriptionLogic)
     }
+  }
 }
