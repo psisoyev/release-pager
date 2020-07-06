@@ -19,7 +19,7 @@ object Settings {
 
   val commonSettings = {
     Seq(
-      scalaVersion := "2.13.1",
+      scalaVersion := "2.13.3",
       scalacOptions := Seq(
         "-Ymacro-annotations",
         "-deprecation",

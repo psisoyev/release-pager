@@ -32,7 +32,7 @@ import scala.concurrent.ExecutionContext.Implicits
 
 object Main extends zio.App {
 
-  override def run(args: List[String]): ZIO[ZEnv, Nothing, Int] = {
+  override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] = {
     val program = for {
       token <- telegramBotToken orElse UIO.succeed("972654063:AAEOiS2tpJkrPNsIMLI7glUUvNCjxpJ_2T8")
 
@@ -47,8 +47,8 @@ object Main extends zio.App {
     } yield ()
 
     program.foldM(
-      err => putStrLn(s"Execution failed with: ${err.getMessage}") *> ZIO.succeed(1),
-      _ => ZIO.succeed(0)
+      err => putStrLn(s"Execution failed with: ${err.getMessage}") *> ZIO.succeed(ExitCode.failure),
+      _ => ZIO.succeed(ExitCode.success)
     )
   }
 
