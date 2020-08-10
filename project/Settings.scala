@@ -33,7 +33,6 @@ object Settings {
         "-Xcheckinit",
         "-Xfatal-warnings"
       ),
-      javacOptions ++= Seq("-g", "-source", "1.8", "-target", "1.8", "-encoding", "UTF-8"),
       logLevel := Level.Info,
       version := (version in ThisBuild).value,
       scalafmtOnCompile := true,

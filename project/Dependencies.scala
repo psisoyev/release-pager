@@ -31,13 +31,12 @@ object Dependencies {
 }
 
 object Version {
-  val zio = "1.0.0-RC21-2"
-  val zioCats = "2.1.3.0-RC16"
+  val zio = "1.0.0"
+  val zioCats = "2.1.4.0"
   val slf4j = "1.7.28"
   val fs2Core = "2.4.2"
   val kindProjector = "0.10.3"
   val canoe = "0.4.1"
-  val http4s = "0.21.6"
   val circe = "0.13.0"
   val doobie = "0.9.0"
   val flyway = "6.5.0"

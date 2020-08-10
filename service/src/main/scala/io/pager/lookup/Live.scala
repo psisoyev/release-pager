@@ -29,7 +29,7 @@ private[lookup] final case class Live(
     } yield ()
 
   private def repositoryStates(updatedVersions: Map[Name, Version]): Task[List[Repository]] =
-    ZIO.foreach(updatedVersions) {
+    ZIO.foreach(updatedVersions.toList) {
       case (name, version) =>
         subscriptionLogic
           .listSubscribers(name)

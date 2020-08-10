@@ -35,7 +35,7 @@ private[subscription] final case class Live(
 
   override def updateVersions(updatedVersions: Map[Name, Version]): Task[Unit] =
     ZIO
-      .foreach(updatedVersions) {
+      .foreach(updatedVersions.toList) {
         case (name, version) =>
           logger.info(s"Updating repository ${name.value} version to $version") *>
             repositoryVersionStorage.updateVersion(name, version)

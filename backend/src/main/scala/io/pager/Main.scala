@@ -55,7 +55,7 @@ object Main extends zio.App {
   private def telegramBotToken: RIO[System, String] =
     for {
       token <- system.env("BOT_TOKEN")
-      token <- ZIO.fromOption(token).mapError(_ => MissingBotToken)
+      token <- ZIO.fromOption(token).orElseFail(MissingBotToken)
     } yield token
 
   private def makeHttpClient: UIO[TaskManaged[Client[Task]]] =
@@ -108,7 +108,7 @@ object Main extends zio.App {
     http4sClient: TaskManaged[Client[Task]],
     canoeClient: TaskManaged[CanoeClient[Task]],
     transactor: RManaged[Blocking, Transactor[Task]]
-  ): RIO[ZEnv, Int] = {
+  ): RIO[ZEnv, Long] = {
     val loggerLayer = Logger.console
     val transactorLayer = transactor.toLayer.orDie
 
