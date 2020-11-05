@@ -7,6 +7,7 @@ import canoe.models.outgoing.TextContent
 import io.pager.client.telegram.scenario.CanoeScenarios
 import io.pager.log.Logger
 import zio.interop.catz._
+import zio.interop.catz.implicits._
 import zio.{ Task, ZIO }
 
 private[telegram] final case class Canoe(
