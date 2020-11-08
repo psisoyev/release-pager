@@ -6,6 +6,7 @@ It is checking for new releases in your pre-defined list of GitHub repositories.
 ![Release Pager](/my-pager.png)
 
 The service is build using Scala, ZIO, Doobie, Http4s, circe, canoe.
+You can learn more about it in [this blog post](https://scala.monster/welcome-zio/).
 
 ### TODO
 There are several things left todo: 
