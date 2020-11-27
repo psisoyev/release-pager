@@ -47,17 +47,17 @@ private[scenario] final case class Live(
       _         <- Scenario.eval(chat.send("Examples: psisoyev/release-pager or zio/zio"))
       userInput <- Scenario.expect(text)
       _         <- Scenario.eval(chat.send(s"Checking repository '$userInput'"))
-      _ <- Scenario.eval {
-            subscriptionLogic.unsubscribe(ChatId(chat.id), Name(userInput)) *>
-              chat.send(s"Removed repository '$userInput' from your subscription list")
-          }
+      _         <- Scenario.eval {
+                     subscriptionLogic.unsubscribe(ChatId(chat.id), Name(userInput)) *>
+                       chat.send(s"Removed repository '$userInput' from your subscription list")
+                   }
     } yield ()
 
   override def list: Scenario[Task, Unit] =
     for {
       chat  <- Scenario.expect(command("list").chat)
       repos <- Scenario.eval(subscriptionLogic.listSubscriptions(ChatId(chat.id)))
-      _ <- {
+      _     <- {
         val result =
           if (repos.isEmpty) chat.send("You don't have subscriptions yet")
           else chat.send("Listing your subscriptions:") *> ZIO.foreach(repos)(name => chat.send(name.value))

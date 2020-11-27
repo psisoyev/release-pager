@@ -18,22 +18,21 @@ private[lookup] final case class Live(
 ) extends ReleaseChecker.Service {
   override def scheduleRefresh: Task[Unit] =
     for {
-      _               <- logger.info("Getting latest repository versions")
-      repos           <- subscriptionLogic.listRepositories
-      latestVersions  <- latestRepositoryVersions(repos.keySet)
+      _              <- logger.info("Getting latest repository versions")
+      repos          <- subscriptionLogic.listRepositories
+      latestVersions <- latestRepositoryVersions(repos.keySet)
       updatedVersions = newVersions(repos, latestVersions)
-      _               <- subscriptionLogic.updateVersions(updatedVersions)
-      statuses        <- repositoryStates(updatedVersions)
-      _               <- broadcastUpdates(statuses)
-      _               <- logger.info("Finished repository refresh")
+      _              <- subscriptionLogic.updateVersions(updatedVersions)
+      statuses       <- repositoryStates(updatedVersions)
+      _              <- broadcastUpdates(statuses)
+      _              <- logger.info("Finished repository refresh")
     } yield ()
 
   private def repositoryStates(updatedVersions: Map[Name, Version]): Task[List[Repository]] =
-    ZIO.foreach(updatedVersions.toList) {
-      case (name, version) =>
-        subscriptionLogic
-          .listSubscribers(name)
-          .map(subscribers => Repository(name, version, subscribers))
+    ZIO.foreach(updatedVersions.toList) { case (name, version) =>
+      subscriptionLogic
+        .listSubscribers(name)
+        .map(subscribers => Repository(name, version, subscribers))
     }
 
   private def latestRepositoryVersions(repos: Set[Name]): IO[PagerError, Map[Name, Option[Version]]] =
@@ -49,11 +48,10 @@ private[lookup] final case class Live(
     latestKnownReleases: Map[Name, Option[Version]],
     latestReleases: Map[Name, Option[Version]]
   ): Map[Name, Version] =
-    latestKnownReleases.flatMap {
-      case (name, latestKnownVersion) =>
-        latestReleases
-          .get(name)
-          .collect { case Some(latestVersion) if !latestKnownVersion.contains(latestVersion) => name -> latestVersion }
+    latestKnownReleases.flatMap { case (name, latestKnownVersion) =>
+      latestReleases
+        .get(name)
+        .collect { case Some(latestVersion) if !latestKnownVersion.contains(latestVersion) => name -> latestVersion }
     }
 
   private def broadcastUpdates(repos: List[Repository]): Task[Unit] =
