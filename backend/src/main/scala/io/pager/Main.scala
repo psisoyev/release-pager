@@ -28,7 +28,6 @@ import zio.system._
 import pureconfig.generic.auto._
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.ExecutionContext.Implicits
 
 object Main extends zio.App {
 
@@ -63,7 +62,7 @@ object Main extends zio.App {
       .runtime[Any]
       .map { implicit rts =>
         BlazeClientBuilder
-          .apply[Task](Implicits.global)
+          .apply[Task](platform.executor.asEC)
           .resource
           .toManaged
       }
