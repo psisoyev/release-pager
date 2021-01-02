@@ -3,7 +3,8 @@ import org.scalafmt.sbt.ScalafmtPlugin.autoImport.scalafmtOnCompile
 import sbt.Keys.{scalacOptions, _}
 import sbt._
 import sbt.util.Level
-import wartremover._
+import wartremover.WartRemover.autoImport.wartremoverErrors
+import wartremover.{Wart, Warts}
 
 object Settings {
   val warts = Warts.allBut(
