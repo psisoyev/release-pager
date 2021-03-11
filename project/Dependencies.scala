@@ -38,7 +38,7 @@ object Version {
   val kindProjector = "0.10.3"
   val canoe = "0.5.1"
   val circe = "0.13.0"
-  val doobie = "0.10.0"
+  val doobie = "0.12.1"
   val flyway = "7.6.0"
   val h2 = "1.4.200"
   val pureconfig = "0.14.1"
