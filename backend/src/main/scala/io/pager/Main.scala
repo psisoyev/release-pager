@@ -45,10 +45,9 @@ object Main extends zio.App {
       _ <- makeProgram(http4sClient, canoeClient, transactor)
     } yield ()
 
-    program.foldM(
-      err => putStrLn(s"Execution failed with: ${err.getMessage}") *> ZIO.succeed(ExitCode.failure),
-      _ => ZIO.succeed(ExitCode.success)
-    )
+    program
+      .tapError(err => putStrLn(s"Execution failed with: ${err.getMessage}"))
+      .exitCode
   }
 
   private def telegramBotToken: RIO[System, String] =

@@ -19,12 +19,12 @@ private[log] final case class Console(clock: Clock.Service, console: ConsoleZIO.
   def error(t: Throwable)(message: => String): UIO[Unit] =
     for {
       _ <- print(message)
-      _ <- console.putStrLn(t.stackTrace)
+      _ <- console.putStrLn(t.stackTrace).orDie
     } yield ()
 
   private def print(message: => String): UIO[Unit] =
-    for {
-      timestamp <- clock.currentDateTime.orDie
+    (for {
+      timestamp <- clock.currentDateTime
       _         <- console.putStrLn(s"[$timestamp] $message")
-    } yield ()
+    } yield ()).orDie
 }
