@@ -12,7 +12,6 @@ lazy val storage = project
 lazy val service = project
   .settings(commonSettings)
   .settings(libraryDependencies ++= serviceDependencies)
-  .settings(higherKinds)
   .dependsOn(storage)
 
 lazy val backend = project
