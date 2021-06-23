@@ -20,7 +20,7 @@ object Settings {
 
   val commonSettings = {
     Seq(
-      scalaVersion := "2.13.5",
+      scalaVersion := "2.13.6",
       scalacOptions := Seq(
         "-Ymacro-annotations",
         "-deprecation",
@@ -51,6 +51,4 @@ object Settings {
   val serviceDependencies = List(zioCats, zioMacros, zioTest, zioTestSbt, fs2Core, canoe, slf4j) ++ circe
 
   val backendDependencies = List(flyway, pureconfig, h2)
-
-  val higherKinds = addCompilerPlugin("org.typelevel" %% "kind-projector" % Version.kindProjector)
 }
