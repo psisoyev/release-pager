@@ -38,7 +38,7 @@ object Version {
   val canoe      = "0.5.1"
   val circe      = "0.14.1"
   val doobie     = "0.13.4"
-  val flyway     = "8.4.1"
+  val flyway     = "8.4.2"
   val h2         = "2.0.206"
   val pureconfig = "0.17.1"
 }
