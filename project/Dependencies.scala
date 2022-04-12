@@ -40,7 +40,5 @@ object Version {
   val doobie     = "0.13.4"
   val h2         = "2.1.212"
   val flyway     = "8.5.7"
-  val h2         = "2.1.212"
-  val flyway     = "8.5.5"
   val pureconfig = "0.17.1"
 }
