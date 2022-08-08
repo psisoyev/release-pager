@@ -5,8 +5,8 @@ It is checking for new releases in your pre-defined list of GitHub repositories.
 
 ![Release Pager](/my-pager.png)
 
-The service is build using Scala, ZIO, Doobie, Http4s, circe, canoe.
-You can learn more about it in [this blog post](https://scala.monster/welcome-zio/).
+The service is build using Scala, ZIO 2, Doobie, Http4s, circe, canoe.
+Originally it was created for [this blog post](https://scala.monster/welcome-zio/), but the blog post is not updated to ZIO 2.
 
 ### TODO
 There are several things left todo: 
