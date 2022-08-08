@@ -4,11 +4,11 @@ import doobie.implicits._
 import doobie.util.transactor.Transactor
 import doobie.{ Query0, Update0 }
 import io.pager.subscription.Repository.{ Name, Version }
-import io.pager.subscription.repository.RepositoryVersionStorage.{ RepositoryVersionMap, Service }
+import io.pager.subscription.repository.RepositoryVersionStorage.RepositoryVersionMap
 import zio.interop.catz._
 import zio.{ Task, UIO }
 
-private[repository] final case class Doobie(xa: Transactor[Task]) extends Service {
+private[repository] final case class Doobie(xa: Transactor[Task]) extends RepositoryVersionStorage {
   override def addRepository(name: Name): UIO[Unit] =
     SQL
       .create(name)
