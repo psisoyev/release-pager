@@ -9,8 +9,8 @@ import wartremover.{ Wart, Warts }
 object Settings {
   val warts = Warts.allBut(
     Wart.Any,
-    Wart.TraversableOps,
     Wart.StringPlusAny,
+    Wart.IterableOps,
     Wart.Nothing,
     Wart.Overloading,
     Wart.JavaSerializable,
@@ -38,10 +38,9 @@ object Settings {
         "-Xfatal-warnings"
       ),
       logLevel := Level.Info,
-      version := (version in ThisBuild).value,
       scalafmtOnCompile := true,
-      wartremoverErrors in (Compile, compile) ++= warts,
-      wartremoverErrors in (Test, compile) ++= warts,
+      Compile / wartremoverErrors ++= warts,
+      Test / wartremoverErrors ++= warts,
       testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
       cancelable in Global := true,
       fork in Global := true, // https://github.com/sbt/sbt/issues/2274

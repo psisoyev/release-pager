@@ -5,7 +5,7 @@ import io.pager.PagerError
 import io.pager.PagerError.{ MalformedUrl, NotFound }
 import org.http4s.circe._
 import org.http4s.client.Client
-import org.http4s.{ EntityDecoder, _ }
+import org.http4s._
 import zio.interop.catz._
 import zio.{ IO, Task, ZIO }
 
