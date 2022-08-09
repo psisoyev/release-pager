@@ -1,6 +1,6 @@
 import Dependencies._
 import org.scalafmt.sbt.ScalafmtPlugin.autoImport.scalafmtOnCompile
-import sbt.Keys.{ scalacOptions, _ }
+import sbt.Keys._
 import sbt._
 import sbt.util.Level
 import wartremover.WartRemover.autoImport.wartremoverErrors
@@ -9,14 +9,15 @@ import wartremover.{ Wart, Warts }
 object Settings {
   val warts = Warts.allBut(
     Wart.Any,
-    Wart.TraversableOps,
     Wart.StringPlusAny,
+    Wart.IterableOps,
     Wart.Nothing,
     Wart.Overloading,
     Wart.JavaSerializable,
     Wart.PublicInference,
     Wart.Serializable,
-    Wart.DefaultArguments
+    Wart.DefaultArguments,
+    Wart.GlobalExecutionContext
   )
 
   val commonSettings =
@@ -37,10 +38,9 @@ object Settings {
         "-Xfatal-warnings"
       ),
       logLevel := Level.Info,
-      version := (version in ThisBuild).value,
       scalafmtOnCompile := true,
-      wartremoverErrors in (Compile, compile) ++= warts,
-      wartremoverErrors in (Test, compile) ++= warts,
+      Compile / wartremoverErrors ++= warts,
+      Test / wartremoverErrors ++= warts,
       testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
       cancelable in Global := true,
       fork in Global := true, // https://github.com/sbt/sbt/issues/2274
@@ -48,7 +48,7 @@ object Settings {
     )
 
   val storageDependencies = List(zio, zioCats) ++ doobie
-  val serviceDependencies = List(zioCats, zioMacros, zioTest, zioTestSbt, fs2Core, canoe, slf4j) ++ circe
+  val serviceDependencies = List(zioCats, zioTest, zioTestSbt, fs2Core, canoe, slf4j) ++ circe
 
   val backendDependencies = List(flyway, pureconfig, h2)
 }

@@ -2,28 +2,25 @@ package io.pager.subscription.repository
 
 import doobie.util.transactor.Transactor
 import io.pager.subscription.Repository.{ Name, Version }
+import io.pager.subscription.repository.RepositoryVersionStorage.RepositoryVersionMap
 import zio._
 
-object RepositoryVersionStorage {
-  type RepositoryVersionStorage = Has[Service]
+trait RepositoryVersionStorage {
+  def addRepository(name: Name): UIO[Unit]
+  def updateVersion(name: Name, version: Version): UIO[Unit]
+  def deleteRepository(name: Name): UIO[Unit]
 
+  def listRepositories: UIO[RepositoryVersionMap]
+}
+
+object RepositoryVersionStorage {
   type RepositoryVersionMap = Map[Name, Option[Version]]
 
-  trait Service {
-    def addRepository(name: Name): UIO[Unit]
-    def updateVersion(name: Name, version: Version): UIO[Unit]
-    def deleteRepository(name: Name): UIO[Unit]
-
-    def listRepositories: UIO[RepositoryVersionMap]
+  val inMemory: ZLayer[Ref[RepositoryVersionMap], Nothing, RepositoryVersionStorage] = ZLayer {
+    ZIO.service[Ref[RepositoryVersionMap]].map(InMemory)
   }
 
-  val inMemory: ZLayer[Has[Ref[RepositoryVersionMap]], Nothing, Has[Service]] =
-    ZLayer.fromService[Ref[RepositoryVersionMap], Service] { subscriptions =>
-      InMemory(subscriptions)
-    }
-
-  val doobie: ZLayer[Has[Transactor[Task]], Nothing, Has[Service]] =
-    ZLayer.fromService[Transactor[Task], Service] { xa: Transactor[Task] =>
-      Doobie(xa)
-    }
+  val doobie: ZLayer[Transactor[Task], Nothing, RepositoryVersionStorage] = ZLayer {
+    ZIO.service[Transactor[Task]].map(Doobie)
+  }
 }

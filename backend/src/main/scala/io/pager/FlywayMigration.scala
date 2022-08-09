@@ -1,18 +1,28 @@
 package io.pager
 
-import io.pager.Config.DBConfig
 import org.flywaydb.core.Flyway
-import zio.Task
+import zio.{ Task, URLayer, ZIO, ZLayer }
+
+trait FlywayMigration {
+  def migrate: Task[Unit]
+}
 
 object FlywayMigration {
-  def migrate(config: DBConfig): Task[Unit] =
-    Task {
-      Flyway
-        .configure(this.getClass.getClassLoader)
-        .dataSource(config.url, config.user, config.password)
-        .locations("migrations")
-        .connectRetries(Int.MaxValue)
-        .load()
-        .migrate()
-    }.unit
+  val live: URLayer[Config, FlywayMigration] = ZLayer {
+    ZIO.service[Config].map { config =>
+      val cfg = config.releasePager.dbConfig
+      new FlywayMigration {
+        override def migrate: Task[Unit] =
+          ZIO.attempt {
+            Flyway
+              .configure(this.getClass.getClassLoader)
+              .dataSource(cfg.url, cfg.user, cfg.password)
+              .locations("migrations")
+              .connectRetries(Int.MaxValue)
+              .load()
+              .migrate()
+          }.unit
+      }
+    }
+  }
 }

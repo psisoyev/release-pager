@@ -8,10 +8,10 @@ import io.pager.subscription.repository.RepositoryVersionStorage
 import zio.{ Task, ZIO }
 
 private[subscription] final case class Live(
-  logger: Logger.Service,
-  chatStorage: ChatStorage.Service,
-  repositoryVersionStorage: RepositoryVersionStorage.Service
-) extends SubscriptionLogic.Service {
+  logger: Logger,
+  chatStorage: ChatStorage,
+  repositoryVersionStorage: RepositoryVersionStorage
+) extends SubscriptionLogic {
   override def subscribe(chatId: ChatId, name: Name): Task[Unit] =
     logger.info(s"$chatId subscribed to $name") *>
       chatStorage.subscribe(chatId, name) *>
