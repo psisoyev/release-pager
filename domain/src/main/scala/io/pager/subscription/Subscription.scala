@@ -1,10 +1,10 @@
 package io.pager.subscription
 
-import java.util.UUID
-
 import io.pager.client.telegram.ChatId
 import io.pager.subscription.Repository.Name
 import io.pager.subscription.Subscription.SubscriptionId
+
+import java.util.UUID
 
 final case class Subscription(id: SubscriptionId, chatId: ChatId, name: Name)
 

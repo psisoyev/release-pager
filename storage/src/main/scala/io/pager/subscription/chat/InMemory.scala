@@ -2,10 +2,10 @@ package io.pager.subscription.chat
 
 import io.pager.client.telegram.ChatId
 import io.pager.subscription.Repository.Name
-import io.pager.subscription.chat.ChatStorage.{ Service, SubscriptionMap }
+import io.pager.subscription.chat.ChatStorage.SubscriptionMap
 import zio.{ Ref, UIO }
 
-private[chat] final case class InMemory(subscriptions: Ref[SubscriptionMap]) extends Service {
+private[chat] final case class InMemory(subscriptions: Ref[SubscriptionMap]) extends ChatStorage {
   type RepositoryUpdate = Set[Name] => Set[Name]
 
   override def subscribe(chatId: ChatId, name: Name): UIO[Unit] =

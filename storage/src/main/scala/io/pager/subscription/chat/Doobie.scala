@@ -7,11 +7,10 @@ import doobie.util.update.Update0
 import io.pager.client.telegram.ChatId
 import io.pager.subscription.Repository.Name
 import io.pager.subscription.Subscription
-import io.pager.subscription.chat.ChatStorage.Service
 import zio.Task
 import zio.interop.catz._
 
-private[chat] final case class Doobie(xa: Transactor[Task]) extends Service {
+private[chat] final case class Doobie(xa: Transactor[Task]) extends ChatStorage {
   override def subscribe(chatId: ChatId, name: Name): Task[Unit] =
     SQL
       .create(chatId, name)

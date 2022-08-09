@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
   val zio        = "dev.zio"  %% "zio"              % Version.zio
-  val zioCats    = ("dev.zio" %% "zio-interop-cats" % Version.zioCats).excludeAll(ExclusionRule("dev.zio"))
+  val zioCats    = ("dev.zio" %% "zio-interop-cats" % Version.zioCats).excludeAll(ExclusionRule("org.typelevel"))
   val zioMacros  = "dev.zio"  %% "zio-macros"       % Version.zio
   val zioTest    = "dev.zio"  %% "zio-test"         % Version.zio % "test"
   val zioTestSbt = "dev.zio"  %% "zio-test-sbt"     % Version.zio % "test"
@@ -13,6 +13,8 @@ object Dependencies {
   val doobieH2     = "org.tpolecat" %% "doobie-h2"     % Version.doobie
   val doobieHikari = "org.tpolecat" %% "doobie-hikari" % Version.doobie
   val doobie       = List(doobieCore, doobieH2, doobieHikari)
+
+  val http4s = List("org.http4s" %% "http4s-dsl", "org.http4s" %% "http4s-blaze-client", "org.http4s" %% "http4s-circe").map(_ % Version.http4s)
 
   val flyway = "org.flywaydb"   % "flyway-core" % Version.flyway
   val h2     = "com.h2database" % "h2"          % Version.h2
@@ -25,20 +27,21 @@ object Dependencies {
 
   val slf4j = "org.slf4j" % "slf4j-simple" % Version.slf4j
 
-  val canoe = "org.augustjune" %% "canoe" % Version.canoe
+  val canoe = ("org.augustjune" %% "canoe" % Version.canoe)
 
   val pureconfig = "com.github.pureconfig" %% "pureconfig" % Version.pureconfig
 }
 
 object Version {
-  val zio        = "1.0.14"
-  val zioCats    = "2.5.1.0"
+  val zio        = "2.0.0"
+  val zioCats    = "3.3.0"
   val slf4j      = "1.7.36"
-  val fs2Core    = "2.5.10"
-  val canoe      = "0.5.1"
+  val fs2Core    = "3.2.11"
+  val canoe      = "0.6.0"
   val circe      = "0.14.1"
-  val doobie     = "0.13.4"
+  val doobie     = "1.0.0-RC2"
   val h2         = "2.1.212"
   val flyway     = "8.5.8"
   val pureconfig = "0.17.1"
+  val http4s     = "0.23.9"
 }

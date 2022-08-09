@@ -12,10 +12,10 @@ import io.pager.validation.RepositoryValidator
 import zio._
 
 private[scenario] final case class Live(
-  repositoryValidator: RepositoryValidator.Service,
-  subscriptionLogic: SubscriptionLogic.Service,
+  repositoryValidator: RepositoryValidator,
+  subscriptionLogic: SubscriptionLogic,
   canoeClient: TelegramClient[Task]
-) extends CanoeScenarios.Service {
+) extends CanoeScenarios {
 
   private implicit val client: TelegramClient[Task] = canoeClient
 
@@ -34,7 +34,7 @@ private[scenario] final case class Live(
 
   private def subscribe(chat: Chat, userInput: String, validated: IO[PagerError, Name]): Task[Unit] =
     validated
-      .foldM(
+      .foldZIO(
         e => chat.send(s"Couldn't add repository '$userInput': ${e.message}"),
         name => chat.send(s"Added repository '$userInput'") *> subscriptionLogic.subscribe(ChatId(chat.id), name)
       )

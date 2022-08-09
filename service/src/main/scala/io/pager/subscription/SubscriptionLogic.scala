@@ -2,34 +2,48 @@ package io.pager.subscription
 
 import io.pager.client.telegram.ChatId
 import io.pager.log.Logger
-import io.pager.log.Logger.Logger
-import io.pager.subscription.chat.ChatStorage.ChatStorage
 import io.pager.subscription.Repository.{ Name, Version }
-import io.pager.subscription.repository.RepositoryVersionStorage.RepositoryVersionStorage
 import io.pager.subscription.chat.ChatStorage
 import io.pager.subscription.repository.RepositoryVersionStorage
 import zio._
-import zio.macros.accessible
 
-@accessible
+trait SubscriptionLogic {
+  def subscribe(chatId: ChatId, name: Name): Task[Unit]
+
+  def unsubscribe(chatId: ChatId, name: Name): Task[Unit]
+
+  def listSubscriptions(chatId: ChatId): Task[Set[Name]]
+
+  def listRepositories: Task[Map[Name, Option[Version]]]
+
+  def listSubscribers(name: Name): Task[Set[ChatId]]
+
+  def updateVersions(updatedVersions: Map[Name, Version]): Task[Unit]
+}
+
 object SubscriptionLogic {
-  type SubscriptionLogic = Has[Service]
-
-  trait Service {
-    def subscribe(chatId: ChatId, name: Name): Task[Unit]
-    def unsubscribe(chatId: ChatId, name: Name): Task[Unit]
-
-    def listSubscriptions(chatId: ChatId): Task[Set[Name]]
-    def listRepositories: Task[Map[Name, Option[Version]]]
-    def listSubscribers(name: Name): Task[Set[ChatId]]
-
-    def updateVersions(updatedVersions: Map[Name, Version]): Task[Unit]
+  type LiveDeps = Logger with ChatStorage with RepositoryVersionStorage
+  val live: URLayer[LiveDeps, SubscriptionLogic] = ZLayer {
+    for {
+      logger                   <- ZIO.service[Logger]
+      chatStorage              <- ZIO.service[ChatStorage]
+      repositoryVersionStorage <- ZIO.service[RepositoryVersionStorage]
+    } yield Live(logger, chatStorage, repositoryVersionStorage)
   }
 
-  type LiveDeps = Logger with ChatStorage with RepositoryVersionStorage
-  def live: URLayer[LiveDeps, Has[Service]] =
-    ZLayer.fromServices[Logger.Service, ChatStorage.Service, RepositoryVersionStorage.Service, Service] {
-      (logger, chatStorage, repositoryVersionStorage) =>
-        Live(logger, chatStorage, repositoryVersionStorage)
+  val dummy: ULayer[SubscriptionLogic] = ZLayer.succeed {
+    new SubscriptionLogic {
+      override def subscribe(chatId: ChatId, name: Name): Task[Unit] = ZIO.unit
+
+      override def unsubscribe(chatId: ChatId, name: Name): Task[Unit] = ZIO.unit
+
+      override def listSubscriptions(chatId: ChatId): Task[Set[Name]] = ZIO.succeed(Set.empty)
+
+      override def listRepositories: Task[Map[Name, Option[Version]]] = ZIO.succeed(Map.empty)
+
+      override def listSubscribers(name: Name): Task[Set[ChatId]] = ZIO.succeed(Set.empty)
+
+      override def updateVersions(updatedVersions: Map[Name, Version]): Task[Unit] = ZIO.unit
     }
+  }
 }

@@ -2,10 +2,8 @@ package io.pager.log
 
 import io.pager.ThrowableOps._
 import zio.UIO
-import zio.clock._
-import zio.console.{ Console => ConsoleZIO }
 
-private[log] final case class Console(clock: Clock.Service, console: ConsoleZIO.Service) extends Logger.Service {
+private[log] final case class Console() extends Logger {
   def error(message: => String): UIO[Unit] = print(message)
 
   def warn(message: => String): UIO[Unit] = print(message)
@@ -19,12 +17,12 @@ private[log] final case class Console(clock: Clock.Service, console: ConsoleZIO.
   def error(t: Throwable)(message: => String): UIO[Unit] =
     for {
       _ <- print(message)
-      _ <- console.putStrLn(t.stackTrace).orDie
+      _ <- zio.Console.printLine(t.stackTrace).orDie
     } yield ()
 
   private def print(message: => String): UIO[Unit] =
     (for {
-      timestamp <- clock.currentDateTime
-      _         <- console.putStrLn(s"[$timestamp] $message")
+      timestamp <- zio.Clock.currentDateTime
+      _         <- zio.Console.printLine(s"[$timestamp] $message")
     } yield ()).orDie
 }

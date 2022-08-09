@@ -1,6 +1,6 @@
 import Dependencies._
 import org.scalafmt.sbt.ScalafmtPlugin.autoImport.scalafmtOnCompile
-import sbt.Keys.{ scalacOptions, _ }
+import sbt.Keys._
 import sbt._
 import sbt.util.Level
 import wartremover.WartRemover.autoImport.wartremoverErrors
@@ -16,7 +16,8 @@ object Settings {
     Wart.JavaSerializable,
     Wart.PublicInference,
     Wart.Serializable,
-    Wart.DefaultArguments
+    Wart.DefaultArguments,
+    Wart.GlobalExecutionContext
   )
 
   val commonSettings =
@@ -48,7 +49,7 @@ object Settings {
     )
 
   val storageDependencies = List(zio, zioCats) ++ doobie
-  val serviceDependencies = List(zioCats, zioMacros, zioTest, zioTestSbt, fs2Core, canoe, slf4j) ++ circe
+  val serviceDependencies = List(zioCats, zioTest, zioTestSbt, fs2Core, canoe, slf4j) ++ circe
 
   val backendDependencies = List(flyway, pureconfig, h2)
 }
