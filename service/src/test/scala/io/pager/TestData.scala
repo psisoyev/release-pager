@@ -1,9 +1,9 @@
 package io.pager
 
-import java.time.Instant
-
 import io.pager.client.github.GitHubRelease
 import io.pager.subscription.Repository.{ Name, Version }
+
+import java.time.Instant
 
 object TestData {
   val finalVersion: Version = Version("1.0.0")

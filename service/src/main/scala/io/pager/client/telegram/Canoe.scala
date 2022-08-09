@@ -11,10 +11,10 @@ import zio.interop.catz.implicits._
 import zio.{ Task, ZIO }
 
 private[telegram] final case class Canoe(
-  logger: Logger.Service,
-  scenarios: CanoeScenarios.Service,
+  logger: Logger,
+  scenarios: CanoeScenarios,
   canoeClient: Client[Task]
-) extends TelegramClient.Service {
+) extends TelegramClient {
 
   implicit val canoe: Client[Task] = canoeClient
 

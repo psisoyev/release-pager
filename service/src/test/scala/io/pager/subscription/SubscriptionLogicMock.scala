@@ -1,9 +1,9 @@
 package io.pager.subscription
 
-import zio.test.mock._
+//import zio.test.mock._
 
-@mockable[SubscriptionLogic.Service]
-object SubscriptionLogicMock
+//@mockable[SubscriptionLogic]
+//object SubscriptionLogicMock
 
 // Using `mockable` we generate code below
 //object SubscriptionLogicMock extends Mock[SubscriptionLogic] {
@@ -16,7 +16,7 @@ object SubscriptionLogicMock
 //
 //  val compose: URLayer[Has[Proxy], SubscriptionLogic] =
 //    ZLayer.fromService { proxy =>
-//      new SubscriptionLogic.Service {
+//      new SubscriptionLogic {
 //        override def subscribe(chatId: ChatId, name: Name): Task[Unit] =
 //          proxy(SubscriptionLogicMock.Subscribe, chatId, name)
 //

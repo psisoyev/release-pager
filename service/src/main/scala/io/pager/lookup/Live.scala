@@ -11,11 +11,11 @@ import zio.{ IO, Task, ZIO }
 import scala.util.Try
 
 private[lookup] final case class Live(
-  logger: Logger.Service,
-  gitHubClient: GitHubClient.Service,
-  telegramClient: TelegramClient.Service,
-  subscriptionLogic: SubscriptionLogic.Service
-) extends ReleaseChecker.Service {
+  logger: Logger,
+  gitHubClient: GitHubClient,
+  telegramClient: TelegramClient,
+  subscriptionLogic: SubscriptionLogic
+) extends ReleaseChecker {
   override def scheduleRefresh: Task[Unit] =
     for {
       _              <- logger.info("Getting latest repository versions")
