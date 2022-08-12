@@ -22,8 +22,8 @@ object Settings {
 
   val commonSettings =
     Seq(
-      scalaVersion := "2.13.8",
-      scalacOptions := Seq(
+      scalaVersion         := "2.13.8",
+      scalacOptions        := Seq(
         "-Ymacro-annotations",
         "-deprecation",
         "-encoding",
@@ -37,13 +37,13 @@ object Settings {
         "-Xcheckinit",
         "-Xfatal-warnings"
       ),
-      logLevel := Level.Info,
-      scalafmtOnCompile := true,
+      logLevel             := Level.Info,
+      scalafmtOnCompile    := true,
       Compile / wartremoverErrors ++= warts,
       Test / wartremoverErrors ++= warts,
-      testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+      testFrameworks       := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
       cancelable in Global := true,
-      fork in Global := true, // https://github.com/sbt/sbt/issues/2274
+      fork in Global       := true, // https://github.com/sbt/sbt/issues/2274
       resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
     )
 
