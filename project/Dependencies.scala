@@ -38,7 +38,7 @@ object Version {
   val slf4j      = "2.0.1"
   val fs2Core    = "3.2.14"
   val canoe      = "0.6.0"
-  val circe      = "0.14.2"
+  val circe      = "0.14.3"
   val doobie     = "1.0.0-RC2"
   val h2         = "2.1.212"
   val flyway     = "8.5.8"
