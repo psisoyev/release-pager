@@ -36,7 +36,7 @@ object Version {
   val zio        = "2.0.2"
   val zioCats    = "23.0.0.1"
   val slf4j      = "2.0.6"
-  val fs2Core    = "3.4.0"
+  val fs2Core    = "3.5.0"
   val canoe      = "0.6.0"
   val circe      = "0.14.3"
   val doobie     = "1.0.0-RC2"
